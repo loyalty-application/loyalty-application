@@ -1,9 +1,12 @@
 [submodule "next-js-frontend"]
 	path = next-js-frontend
 	url = git@github.com:cs301-itsa/project-2022-23t2-project-2022-23t2-g1-t6-next-js-frontend.git
+    branch = main
 [submodule "go-gin-backend"]
 	path = go-gin-backend
 	url = git@github.com:cs301-itsa/project-2022-23t2-project-2022-23t2-g1-t6-go-gin-backend.git
+    branch = main
 [submodule "go-worker-node"]
 	path = go-worker-node
 	url = git@github.com:cs301-itsa/project-2022-23t2-project-2022-23t2-g1-t6-go-worker-node.git
+    branch = main
