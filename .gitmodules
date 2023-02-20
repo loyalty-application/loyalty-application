@@ -10,3 +10,8 @@
 	path = go-worker-node
 	url = git@github.com:cs301-itsa/project-2022-23t2-project-2022-23t2-g1-t6-go-worker-node.git
     branch = main
+[submodule "go-sftp-txn"]
+	path = go-sftp-txn
+	url = git@github.com:cs301-itsa/project-2022-23t2-project-2022-23t2-g1-t6-go-sftp-txn.git
+    branch = main
+
