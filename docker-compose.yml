@@ -34,6 +34,8 @@ services:
     restart: always
     depends_on:
       - mongo
+    volumes:
+      - ./go-gin-backend:/app
     ports:
       - 8080:8080
 
