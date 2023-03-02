@@ -1,5 +1,7 @@
 version: '3.1'
+ 
 services:
+  # mongo db container - mongodb
   mongo:
     container_name: mongo
     image: mongo
@@ -8,6 +10,7 @@ services:
     ports:
       - 27017:27017
 
+  # mongo express container - UI for mongodb
   mongo-express:
     container_name: mongo-express
     image: mongo-express
@@ -18,13 +21,13 @@ services:
     ports:
       - 8081:8081
 
-  
+  # go-gin-backend container
   go-gin-backend:
     container_name: go-gin-backend
     image: go-gin-backend:latest
     build: 
       context: ./go-gin-backend
-      dockerfile: ./docker/Dockerfile.dev
+      dockerfile: ./Dockerfile.dev
     env_file: ./go-gin-backend/.env
     restart: always
     depends_on:
