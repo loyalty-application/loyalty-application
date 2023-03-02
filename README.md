@@ -16,9 +16,9 @@ This project has the follow dependencies:
 ## Setup
 
 ### Cloning the project 
-This project contains submodules, to ensure the submodules are clone properly as well, run the clone command with the `--recursive` flag:
+This project contains submodules, to ensure the submodules are clone properly as well, run the clone command with the `--recurse-submodules` flag:
 ```bash
-git clone --recursive <repository-url>
+git clone --recurse-submodules <repository-url>
 ```
 
 Take note that after you've cloned the submodules recursively, they will be directly checked out to a commit rather than a branch.
