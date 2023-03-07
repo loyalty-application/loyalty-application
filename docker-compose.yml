@@ -1,41 +1,41 @@
 version: '3.1'
- 
+
 services:
   # mongo db container - mongodb
-  mongo:
-    container_name: mongo
-    image: mongo
-    restart: always
-    env_file: ./.env
-    ports:
-      - 27017:27017
+  # mongo:
+  #   container_name: mongo
+  #   image: mongo
+  #   restart: always
+  #   env_file: ./.env
+  #   ports:
+  #     - 27017:27017
 
-  # mongo express container - UI for mongodb
-  mongo-express:
-    container_name: mongo-express
-    image: mongo-express
-    restart: always
-    env_file: ./.env
-    depends_on: 
-      - mongo
-    ports:
-      - 8081:8081
+  # # mongo express container - UI for mongodb
+  # mongo-express:
+  #   container_name: mongo-express
+  #   image: mongo-express
+  #   restart: always
+  #   env_file: ./.env
+  #   depends_on: 
+  #     - mongo
+  #   ports:
+  #     - 8081:8081
 
   # go-gin-backend container
-  go-gin-backend:
-    container_name: go-gin-backend
-    image: go-gin-backend:latest
-    build: 
-      context: ./go-gin-backend
-      dockerfile: ./Dockerfile.dev
-    env_file: ./go-gin-backend/.env
-    restart: always
-    depends_on:
-      - mongo
-    volumes:
-      - ./go-gin-backend:/app
-    ports:
-      - 8080:8080
+  # go-gin-backend:
+  #   container_name: go-gin-backend
+  #   image: go-gin-backend:latest
+  #   build: 
+  #     context: ./go-gin-backend
+  #     dockerfile: ./Dockerfile.dev
+  #   env_file: ./go-gin-backend/.env
+  #   restart: always
+  #   depends_on:
+  #     - mongo
+  #   volumes:
+  #     - ./go-gin-backend:/app
+  #   ports:
+  #     - 8080:8080
 
   # interface for kafka
   zookeeper:
@@ -67,7 +67,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  
+      KAFKA_PRODUCER_ACKS: all
+      KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
     depends_on:
@@ -86,62 +88,79 @@ services:
       kafka-topics --bootstrap-server broker:29092 --list
       exit 0
       "
-      
-  ## lenses 
-  #lenses:
+    ## lenses 
+    #lenses:
     #image: lensesio/lenses:5.0
     #hostname: lenses
     #container_name: lenses
     #environment:
-      #LENSES_PORT: 9991
-      #LENSES_SECURITY_USER: admin
-      #LENSES_SECURITY_PASSWORD: sha256:8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+    #LENSES_PORT: 9991
+    #LENSES_SECURITY_USER: admin
+    #LENSES_SECURITY_PASSWORD: sha256:8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
     #ports:
-      #- 9991:9991
-      #- 9102:9102
+    #- 9991:9991
+    #- 9102:9102
 
-  ## schema-registry
-  #schema-registry:
-    #image: confluentinc/cp-schema-registry:7.3.1
-    #hostname: schema-registry
-    #container_name: schema-registry
-    #depends_on:
-      #- broker
-    #ports:
-      #- "8081:8081"
-    #environment:
-      #SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      #SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
-      #SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    # schema-registry
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.1
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
 
-  ## kafka connect
-  #connect:
-    #image: confluentinc/cp-kafka-connect:5.2.1
-    #hostname: connect
-    #container_name: connect
-    #depends_on:
-      #- zookeeper
-      #- broker
-      #- schema-registry
-    #ports:
-      #- "8083:8083"
-    #environment:
-      #CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
-      #CONNECT_REST_PORT: 8083
-      #CONNECT_GROUP_ID: compose-connect-group
-      #CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
-      #CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
-      #CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-      #CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      #CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
-      #CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      #CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
-      #CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      #CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      #CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
-      #CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
-      #CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
-      #CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
-      #CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
-      #CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
-      #CONNECT_PLUGIN_PATH: '/usr/share/java'
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect-base:latest
+    container_name: kafka-connect
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "broker:29092"
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components/'
+      CONNECT_PRODUCER_ACKS: all
+      CONNECT_PRODUCER_IDEMPOTENCE: true
+      CONNECT_ENABLE_IDEMPOTENCE: true
+    command:
+      - bash
+      - -c
+      - |
+        echo "Installing connector plugins"
+        # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
+        confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
+        # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
+        #
+        # -----------
+        # Launch the Kafka Connect worker
+        /etc/confluent/docker/run &
+        #
+        # Don't exit
+        sleep infinity
+    volumes:
+      - $PWD/go-sftp-txn/data:/data
