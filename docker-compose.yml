@@ -9,6 +9,7 @@ services:
     env_file: ./.env
     ports:
       - 27017:27017
+    profiles: ["web"]
 
   # mongo express container - UI for mongodb
   mongo-express:
@@ -19,7 +20,8 @@ services:
     depends_on: 
       - mongo
     ports:
-      - 8081:8081
+      - 8085:8081
+    profiles: ["web"]
 
   # go-gin-backend container
   go-gin-backend:
@@ -36,6 +38,7 @@ services:
       - ./go-gin-backend:/app
     ports:
       - 8080:8080
+    profiles: ["web"]
 
   # interface for kafka
   zookeeper:
@@ -44,6 +47,7 @@ services:
     container_name: zookeeper
     ports:
       - "2181:2181"
+    profiles: ["kafka"]
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -59,6 +63,7 @@ services:
       - "29092:29092"
       - "9092:9092"
       - "9101:9101"
+    profiles: ["kafka"]
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -75,6 +80,7 @@ services:
     depends_on:
       - broker
     entrypoint: [ '/bin/sh', '-c' ]
+    profiles: ["kafka"]
     command: |
       "
       # blocks until kafka is reachable
@@ -110,6 +116,7 @@ services:
       - broker
     ports:
       - "8081:8081"
+    profiles: ["kafka"]
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
@@ -124,6 +131,7 @@ services:
       - schema-registry
     ports:
       - 8083:8083
+    profiles: ["kafka"]
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "broker:29092"
       CONNECT_REST_PORT: 8083
