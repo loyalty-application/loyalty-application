@@ -252,3 +252,17 @@ services:
     # before attempting to start kafka-connect-ui.
     depends_on:
       - connect
+
+  sftptxn:
+    container_name: sftptxn
+    image: sftptxn:latest
+    build:
+      context: ./go-sftp-txn
+      dockerfile: ./Dockerfile
+    env_file: ./go-sftp-txn/.env
+    volumes:
+      - ./go-sftp-txn/data:/root/data
+    command: "2021-08-28"
+    depends_on:
+      - connect
+    profiles: [ "kafka" ]

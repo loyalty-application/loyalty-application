@@ -37,3 +37,4 @@ override.tf.json
 terraform.rc
 
 test
+.DS_Store
