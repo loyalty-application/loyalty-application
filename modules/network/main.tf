@@ -1,7 +1,8 @@
 variable "network_subnet_private_cidrs" {
   type        = list(string)
   description = "List of cidr blocks, with each element repesenting a private subnet"
-  default     = cidrsubnets(aws_vpc.main_vpc.cidr_block, 4, 4, 4)
+  default     = ["10.0.0.0/24", "10.0.1.0/24", "10.0.2.0/24"]
+
 }
 variable "network_subnet_availability_zones" {
   type        = list(string)
