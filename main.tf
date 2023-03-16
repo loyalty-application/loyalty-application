@@ -62,4 +62,8 @@ module "ecs_ec2" {
   ecs_asg_desired_capacity = var.ecs_asg_desired_capacity
   ecs_asg_hc_grace_period  = var.ecs_asg_hc_grace_period
   ecs_asg_hc_type          = var.ecs_asg_hc_type
+
+  MONGO_HOST     = var.MONGO_HOST
+  MONGO_USERNAME = var.MONGO_USERNAME
+  MONGO_PASSWORD = var.MONGO_PASSWORD
 }

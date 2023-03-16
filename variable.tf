@@ -55,3 +55,15 @@ variable "ecs_asg_hc_type" {
   type = string
 }
 
+variable "MONGO_HOST" {
+  type      = string
+  sensitive = true
+}
+variable "MONGO_PASSWORD" {
+  type      = string
+  sensitive = true
+}
+variable "MONGO_USERNAME" {
+  type      = string
+  sensitive = true
+}

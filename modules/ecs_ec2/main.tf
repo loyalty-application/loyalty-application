@@ -3,6 +3,7 @@ resource "aws_ecs_cluster" "ecs_cluster" {
 }
 
 resource "aws_launch_configuration" "ecs_launch_config" {
+  name_prefix          = "${var.project_name}-launch-config"
   image_id             = data.aws_ami.amazon-linux-2.id
   iam_instance_profile = var.ec2_iam_instance_profile
   security_groups      = var.ec2_vpc_security_group_ids
@@ -12,13 +13,14 @@ resource "aws_launch_configuration" "ecs_launch_config" {
     volume_type = var.ec2_volume_type
     volume_size = var.ec2_volume_size
   }
-  #user_data = filebase64("${path.module}/user_data.sh")
-  #user_data = "#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.ecs_cluster.name} >> /etc/ecs/ecs.config"
-  #user_data = templatefile("${path.module}/user_data.tftpl", { ECS_CLUSTER = var.ecs_cluster_name })
   user_data = <<EOF
       #!/bin/bash
       echo ECS_CLUSTER=${aws_ecs_cluster.ecs_cluster.name} >> /etc/ecs/ecs.config
   EOF
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
@@ -33,11 +35,16 @@ resource "aws_autoscaling_group" "ecs_asg" {
   health_check_type         = var.ecs_asg_hc_type
 
 
+
   # prevents terraform from removing this tag
   tag {
     key                 = "AmazonECSManaged"
     value               = true
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -57,6 +64,7 @@ resource "aws_ecs_capacity_provider" "ecs_asg_cap_provider" {
     #target_capacity           = 10
     #}
   }
+
 }
 
 # assign the capacity provider to the cluster
@@ -73,23 +81,32 @@ resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_cap_provider" {
 }
 
 resource "aws_ecs_task_definition" "ecs_task_def" {
-  family = "${var.project_name}-task-def"
-  container_definitions = jsonencode([
-    {
-      name      = "${var.project_name}-container"
-      image     = "docker.io/loyaltyapplication/go-gin-backend:latest"
-      cpu       = 1024
-      memory    = 512
-      essential = true
-      #environment
-      portMappings = [
-        {
-          containerPort = 8080
-          hostPort      = 0
-        }
-      ]
-    }
-  ])
+  family                = "${var.project_name}-task-def"
+  container_definitions = <<TASK_DEFINITION
+  [
+      {
+        "cpu": 1024,
+        "memory": 512,
+        "environment": [
+            {"name": "MONGO_USERNAME", "value":"${var.MONGO_USERNAME}"},
+            {"name": "MONGO_PASSWORD", "value":"${var.MONGO_PASSWORD}"},
+            {"name": "MONGO_HOST", "value":"${var.MONGO_HOST}"},
+            {"name": "SERVER_PORT", "value":"8080"},
+            {"name": "JWT_SECRET", "value":"SOMEJWTSECRET"},
+            {"name": "KAFKA_BOOTSTRAP_SERVER","value":"kafka:9092" }
+        ],
+        "essential": true,
+        "image": "docker.io/loyaltyapplication/go-gin-backend:latest",
+        "name": "${var.project_name}-container",
+        "portMappings": [
+          {
+            "containerPort": 8080,
+            "hostPort": 0
+          }
+        ]
+      }
+    ]
+    TASK_DEFINITION
 
 }
 
