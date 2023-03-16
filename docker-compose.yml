@@ -1,6 +1,8 @@
 version: '3.1'
 
 services:
+  # TODO: add nextjs ui
+
   # mongo db container - mongodb
   mongo:
     container_name: mongo
@@ -38,6 +40,7 @@ services:
       - 8080:8080
     profiles: [ "web" ]
 
+  # go worker node container
   go-worker:
     container_name: go-worker
     image: go-worker:latest
@@ -51,8 +54,9 @@ services:
       - broker
       - mongo
     platform: linux/amd64
-    profiles: [ "web", "kafka" ]
+    profiles: [ "kafka" ]
 
+  
   broker:
     image: confluentinc/cp-kafka:latest
     container_name: broker
@@ -82,6 +86,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: ['kafka']
 
   broker2:
     image: confluentinc/cp-kafka:latest
@@ -113,6 +118,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: [ "kafka" ]
 
   broker3:
     image: confluentinc/cp-kafka:latest
@@ -144,6 +150,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: ['kafka']
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
@@ -168,6 +175,7 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
+    profiles: ['kafka']
     # schema-registry
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.1
@@ -271,6 +279,7 @@ services:
     # before attempting to start kafka-connect-ui.
     depends_on:
       - connect
+    profiles: ['kafka']
 
   sftptxn:
     container_name: sftptxn
