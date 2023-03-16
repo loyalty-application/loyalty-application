@@ -1,3 +1,7 @@
+variable "project_name" {
+  type    = string
+  default = "loyalty-app-demo"
+}
 variable "ec2_ami" {
   type    = string
   default = "ami-08935252a36e25f85"
@@ -21,16 +25,10 @@ variable "ec2_volume_type" {
 }
 variable "ec2_volume_size" {
   type    = number
-  default = 8
+  default = 30
 }
 
 
-variable "ecs_cluster_name" {
-  type = string
-}
-variable "ecs_asg_name" {
-  type = string
-}
 variable "ecs_asg_subnets" {
   type = list(string)
 }
@@ -49,5 +47,6 @@ variable "ecs_asg_hc_grace_period" {
 variable "ecs_asg_hc_type" {
   type = string
 }
+
 
 

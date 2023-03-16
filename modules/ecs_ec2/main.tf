@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = var.ecs_cluster_name
+  name = "${var.project_name}-cluster"
 }
 
 resource "aws_launch_configuration" "ecs_launch_config" {
@@ -12,11 +12,17 @@ resource "aws_launch_configuration" "ecs_launch_config" {
     volume_type = var.ec2_volume_type
     volume_size = var.ec2_volume_size
   }
-  user_data = templatefile("${path.module}/user_data.tftpl", { ECS_CLUSTER = var.ecs_cluster_name })
+  #user_data = filebase64("${path.module}/user_data.sh")
+  #user_data = "#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.ecs_cluster.name} >> /etc/ecs/ecs.config"
+  #user_data = templatefile("${path.module}/user_data.tftpl", { ECS_CLUSTER = var.ecs_cluster_name })
+  user_data = <<EOF
+      #!/bin/bash
+      echo ECS_CLUSTER=${aws_ecs_cluster.ecs_cluster.name} >> /etc/ecs/ecs.config
+  EOF
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
-  name                 = var.ecs_asg_name
+  name                 = "${var.project_name}-asg"
   vpc_zone_identifier  = var.ecs_asg_subnets
   launch_configuration = aws_launch_configuration.ecs_launch_config.name
 
@@ -25,4 +31,71 @@ resource "aws_autoscaling_group" "ecs_asg" {
   max_size                  = var.ecs_asg_max_size
   health_check_grace_period = var.ecs_asg_hc_grace_period
   health_check_type         = var.ecs_asg_hc_type
+
+
+  # prevents terraform from removing this tag
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = true
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "ecs_asg_cap_provider" {
+  name = "${var.project_name}-asg-capacity-provider"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.ecs_asg.arn
+    # decides whether to terminate aka delete the instances when they scale in
+    #managed_termination_protection = "ENABLED"
+
+    # TODO: enable these and allow variables 
+    #managed_scaling {
+    #maximum_scaling_step_size = 1000
+    #minimum_scaling_step_size = 1
+    #status                    = "ENABLED"
+    #target_capacity           = 10
+    #}
+  }
+}
+
+# assign the capacity provider to the cluster
+resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_cap_provider" {
+  cluster_name = aws_ecs_cluster.ecs_cluster.name
+
+  capacity_providers = [aws_ecs_capacity_provider.ecs_asg_cap_provider.name]
+
+  #default_capacity_provider_strategy {
+  #base              = 1
+  #weight            = 100
+  #capacity_provider = ""
+  #}
+}
+
+resource "aws_ecs_task_definition" "ecs_task_def" {
+  family = "${var.project_name}-task-def"
+  container_definitions = jsonencode([
+    {
+      name      = "${var.project_name}-container"
+      image     = "docker.io/loyaltyapplication/go-gin-backend:latest"
+      cpu       = 1024
+      memory    = 512
+      essential = true
+      #environment
+      portMappings = [
+        {
+          containerPort = 8080
+          hostPort      = 0
+        }
+      ]
+    }
+  ])
+
+}
+
+resource "aws_ecs_service" "ecs_service" {
+  name            = "${aws_ecs_cluster.ecs_cluster.name}-service"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.ecs_task_def.arn
+  desired_count   = 1
 }

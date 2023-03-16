@@ -1,3 +1,6 @@
+variable "project_name" {
+  type = string
+}
 variable "key_pair_name" {
   type = string
 }
@@ -6,17 +9,17 @@ variable "key_pair_public_key" {
 }
 
 
-variable "network_subnet_private_cidrs" {
-  type = list(string)
+variable "network_vpc_cidr" {
+  type = string
 }
 variable "network_subnet_availability_zones" {
   type = list(string)
 }
-variable "network_vpc_cidr" {
-  type = string
+variable "network_subnet_private_cidrs" {
+  type = list(string)
 }
-variable "network_subnet_public_cidr" {
-  type = string
+variable "network_subnet_public_cidrs" {
+  type = list(string)
 }
 
 

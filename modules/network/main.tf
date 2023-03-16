@@ -1,7 +1,11 @@
+# main vpc
 resource "aws_vpc" "network_vpc" {
-  cidr_block = var.network_vpc_cidr
 
+  cidr_block           = var.network_vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 }
+
 # private subnet
 resource "aws_subnet" "network_subnet_private" {
   for_each          = zipmap(var.network_subnet_private_cidrs, var.network_subnet_availability_zones)
@@ -9,15 +13,19 @@ resource "aws_subnet" "network_subnet_private" {
   availability_zone = each.value
   vpc_id            = aws_vpc.network_vpc.id
 }
-
 # public subnet
+resource "aws_subnet" "network_subnet_public" {
+  for_each                = zipmap(var.network_subnet_public_cidrs, var.network_subnet_availability_zones)
+  cidr_block              = each.key
+  availability_zone       = each.value
+  vpc_id                  = aws_vpc.network_vpc.id
+  map_public_ip_on_launch = true
+}
+
 resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.network_vpc.id
 }
-resource "aws_subnet" "network_subnet_public" {
-  vpc_id     = aws_vpc.network_vpc.id
-  cidr_block = var.network_subnet_public_cidr
-}
+
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.network_vpc.id
   route {
@@ -27,6 +35,33 @@ resource "aws_route_table" "public_route_table" {
 }
 # associate route table with public subnet
 resource "aws_route_table_association" "route_table_association" {
-  subnet_id      = aws_subnet.network_subnet_public.id
+  depends_on = [
+    aws_subnet.network_subnet_public
+  ]
+  for_each       = { for i, val in aws_subnet.network_subnet_public : i => val.id }
+  subnet_id      = each.value
   route_table_id = aws_route_table.public_route_table.id
+}
+
+resource "aws_security_group" "ecs_ec2_security_group" {
+  name        = "ecs_ec2_security_group"
+  description = "ecs_ec2_security_group"
+  vpc_id      = aws_vpc.network_vpc.id
+
+  ingress {
+    description = "Allow ssh from internet"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
 }
