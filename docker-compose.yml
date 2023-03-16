@@ -82,6 +82,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: ['kafka']
 
   broker2:
     image: confluentinc/cp-kafka:latest
@@ -113,6 +114,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: [ "kafka" ]
 
   broker3:
     image: confluentinc/cp-kafka:latest
@@ -144,6 +146,7 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: ['kafka']
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
@@ -168,6 +171,7 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
+    profiles: ['kafka']
     # schema-registry
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.1

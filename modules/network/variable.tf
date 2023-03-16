@@ -16,3 +16,8 @@ variable "network_vpc_cidr" {
   default     = "10.0.0.0/20"
 }
 
+variable "network_subnet_public_cidr" {
+  # TODO: change to allow multiple public subnets
+  type    = string
+  default = "10.0.3.0/24"
+}

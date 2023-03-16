@@ -32,6 +32,7 @@ module "network" {
   network_vpc_cidr                  = var.network_vpc_cidr
   network_subnet_availability_zones = var.network_subnet_availability_zones
   network_subnet_private_cidrs      = var.network_subnet_private_cidrs
+  network_subnet_public_cidr        = var.network_subnet_public_cidr
 }
 
 
@@ -43,14 +44,22 @@ module "ecr" {
 }
 
 
+# ecs using ec2
 module "ecs_ec2" {
   source                     = "./modules/ecs_ec2"
-  ec2_key_pair_name          = module.auth.key_pair_name
-  ec2_iam_instance_profile   = module.auth.iam_ecs_instance_profile
-  ec2_subnet_id              = module.network.network_subnets[0]
-  ec2_vpc_security_group_ids = []
   ec2_ami                    = var.ec2_ami
   ec2_instance_type          = var.ec2_instance_type
-  ecs_cluster_name           = var.ecs_cluster_name
+  ec2_vpc_security_group_ids = []
+  ec2_key_pair_name          = module.auth.key_pair_name
+  ec2_iam_instance_profile   = module.auth.iam_ecs_instance_profile
 
+  ecs_cluster_name = var.ecs_cluster_name
+
+  ecs_asg_name             = var.ecs_asg_name
+  ecs_asg_min_size         = var.ecs_asg_min_size
+  ecs_asg_max_size         = var.ecs_asg_max_size
+  ecs_asg_desired_capacity = var.ecs_asg_desired_capacity
+  ecs_asg_hc_grace_period  = var.ecs_asg_hc_grace_period
+  ecs_asg_hc_type          = var.ecs_asg_hc_type
+  ecs_asg_subnets          = module.network.network_subnets_public
 }
