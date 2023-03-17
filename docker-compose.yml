@@ -1,15 +1,15 @@
 version: '3.1'
 
 services:
-  # mongo db container - mongodb
-  mongo:
-    container_name: mongo
-    image: mongo
-    restart: always
-    env_file: ./.env
-    ports:
-      - 27017:27017
-    profiles: ["web"]
+  # # mongo db container - mongodb
+  # mongo:
+  #   container_name: mongo
+  #   image: mongo
+  #   restart: always
+  #   env_file: ./.env
+  #   ports:
+  #     - 27017:27017
+  #   profiles: ["web"]
 
   # mongo express container - UI for mongodb
   mongo-express:
@@ -21,6 +21,18 @@ services:
       - mongo
     ports:
       - 8085:8081
+    profiles: ["web"]
+  
+  # standalone mongodb container as replica set
+  mongo:
+    image: mongo
+    container_name: mongo
+    volumes:
+      - ./key:/opt/keyfile
+    env_file: ./.env
+    ports:
+      - 27017:27017
+    command: 'mongod --auth --keyFile /opt/keyfile --replSet replica-set'
     profiles: ["web"]
 
   # go-gin-backend container
