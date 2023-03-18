@@ -72,3 +72,6 @@ module "ecs_ec2" {
   iam_ecs_service_role     = "${var.project_name}-ecs-service-role"
   iam_ecs_instance_profile = "${var.project_name}-ecs-instance-profile"
 }
+
+
+

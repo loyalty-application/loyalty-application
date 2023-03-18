@@ -18,13 +18,12 @@ data "aws_iam_policy_document" "ecs-instance-policy" {
   }
 }
 
-
-
 # ec2 service role
 resource "aws_iam_role" "ecs-instance-role" {
-  name               = var.iam_ecs_instance_role
-  path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.ecs-instance-policy.json
+  name                  = var.iam_ecs_instance_role
+  path                  = "/"
+  assume_role_policy    = data.aws_iam_policy_document.ecs-instance-policy.json
+  force_detach_policies = true
 }
 resource "aws_iam_instance_profile" "ecs-instance-profile" {
   name = var.iam_ecs_instance_profile
@@ -35,9 +34,10 @@ resource "aws_iam_instance_profile" "ecs-instance-profile" {
 
 # ecs service role
 resource "aws_iam_role" "ecs-service-role" {
-  name               = var.iam_ecs_service_role
-  path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.ecs-service-policy.json
+  name                  = var.iam_ecs_service_role
+  path                  = "/"
+  assume_role_policy    = data.aws_iam_policy_document.ecs-service-policy.json
+  force_detach_policies = true
 }
 resource "aws_iam_role_policy_attachment" "ecs-instance-role-attachment" {
   role       = aws_iam_role.ecs-instance-role.name
@@ -194,9 +194,7 @@ resource "aws_ecs_service" "ecs_service" {
 
   # prevent race condition
   depends_on = [
-
     aws_iam_role.ecs-service-role
-
   ]
 
 }
