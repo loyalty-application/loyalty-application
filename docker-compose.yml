@@ -13,16 +13,29 @@ services:
       - 8085:8081
     profiles: ["web"]
   
+  # mongo keyfile generator
+  keyfile-generator:
+    container_name: keyfile-generator
+    image: alpine:latest
+    restart: on-failure
+    command: sh -c 'apk --no-cache add openssl && openssl rand -base64 741 > keyfile/key && chmod 400 keyfile/key && chown 999:999 keyfile/key && cat keyfile/key'
+    volumes:
+      - keyfile:/keyfile
+    profiles: [ "web" ]
+  
   # standalone mongodb container as replica set
   mongo:
     image: mongo
     container_name: mongo
+    restart: always
     volumes:
-      - ./key:/opt/keyfile
+      - keyfile:/keyfile
     env_file: ./.env
     ports:
       - 27017:27017
-    command: 'mongod --auth --keyFile /opt/keyfile --replSet replica-set'
+    command: 'mongod --auth --keyFile /keyfile/key --replSet replica-set'
+    depends_on:
+      - keyfile-generator
     profiles: ["web"]
 
   # Initialization server
@@ -31,6 +44,7 @@ services:
     image: mongo
     container_name: mongo-init
     restart: on-failure
+    env_file: ./.env
     depends_on:
       - mongo
     command: >
@@ -38,8 +52,8 @@ services:
         sleep 10 &&
         mongosh \
           --host mongo:27017 \
-          --username root \
-          --password example \
+          --username ${MONGO_INITDB_ROOT_USERNAME} \
+          --password ${MONGO_INITDB_ROOT_PASSWORD} \
           --eval "rs.initiate()"'
     profiles: [ "web" ]
 
@@ -354,3 +368,6 @@ services:
     depends_on:
       - connect
     profiles: [ "kafka" ]
+
+volumes:
+  keyfile:
