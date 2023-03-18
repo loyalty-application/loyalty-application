@@ -31,5 +31,4 @@ module "network" {
   network_vpc_cidr                  = var.network_vpc_cidr
   network_subnet_availability_zones = var.network_subnet_availability_zones
   network_subnet_private_cidrs      = var.network_subnet_private_cidrs
-
 }

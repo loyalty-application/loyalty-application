@@ -7,6 +7,8 @@ services:
     image: mongo
     restart: always
     env_file: ./.env
+    ports:
+      - 27017:27017
     profiles: [ "web" ]
 
   # mongo express container - UI for mongodb
@@ -51,6 +53,8 @@ services:
       - broker
       - mongo
     platform: linux/amd64
+    volumes:
+      - ./go-worker-node:/worker
     profiles: [ "web", "kafka" ]
 
   broker:
@@ -79,9 +83,11 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 1
+    restart: always
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: [ "kafka" ]
 
   broker2:
     image: confluentinc/cp-kafka:latest
@@ -110,9 +116,11 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 1
+    restart: always
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: [ "kafka" ]
 
   broker3:
     image: confluentinc/cp-kafka:latest
@@ -141,9 +149,11 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 1
+    restart: always
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+    profiles: [ "kafka" ]
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
@@ -157,8 +167,8 @@ services:
       kafka-topics --bootstrap-server broker:29092 --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic ftptransactions --replication-factor 3 --partitions 30 --config min.insync.replicas=2
-      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic resttransactions --replication-factor 3 --partitions 30 --config min.insync.replicas=2
+      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic ftptransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2
+      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic resttransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2
 
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server broker:29092 --list
@@ -168,7 +178,9 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
-    # schema-registry
+    profiles: [ "kafka" ]
+
+  # schema-registry
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.1
     container_name: schema-registry
@@ -180,6 +192,7 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    restart: always
     profiles: [ "kafka" ]
 
   connect:
@@ -213,6 +226,58 @@ services:
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+    restart: always
+    command:
+      - bash
+      - -c
+      - |
+        echo "Installing connector plugins"
+        # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
+        confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
+        # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
+        #
+        # -----------
+        # Launch the Kafka Connect worker
+        /etc/confluent/docker/run &
+        #
+        # Don't exit
+        sleep infinity
+    volumes:
+      - ./go-sftp-txn/data:/data
+    profiles: [ "kafka" ]
+
+  connect1:
+    image: cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
+    hostname: connect1
+    container_name: connect1
+    depends_on:
+      - broker
+      - schema-registry
+    # ports:
+    #   - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect1
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      # CLASSPATH required due to CC-2422
+      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-7.3.1.jar
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+    restart: always
     command:
       - bash
       - -c
@@ -253,24 +318,6 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
     profiles: [ "kafka" ]
-
-  kafka-connect-ui:
-    image: landoop/kafka-connect-ui:latest
-    hostname: kafka-connect-ui
-    # kafka-connect-ui binds to port 8000, but we are going to expose it on our local
-    # machine on port 8002.
-    ports:
-      - "8000:8000"
-    environment:
-      # Required. Instructs the UI where it can find Kafka Connect.
-      CONNECT_URL: "http://connect:8083/"
-      # This instructs the docker image to use Caddy to proxy traffic to kafka-connect-ui.
-      PROXY: "true"
-    # kafka-connect-ui relies upon Kafka Connect.
-    # This will instruct docker to wait until those services are up
-    # before attempting to start kafka-connect-ui.
-    depends_on:
-      - connect
 
   sftptxn:
     container_name: sftptxn
