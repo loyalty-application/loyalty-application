@@ -10,3 +10,6 @@ output "network_vpc_id" {
 output "network_security_group_id" {
   value = aws_security_group.ecs_ec2_security_group.id
 }
+output "certificate_arn" {
+  value = aws_acm_certificate_validation.cert_validation_records.certificate_arn
+}

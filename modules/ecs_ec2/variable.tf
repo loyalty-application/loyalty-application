@@ -10,15 +10,6 @@ variable "ec2_instance_type" {
   type    = string
   default = "t2.micro"
 }
-variable "ec2_iam_instance_profile" {
-  type = string
-}
-variable "ec2_vpc_security_group_ids" {
-  type = list(string)
-}
-variable "ec2_key_pair_name" {
-  type = string
-}
 variable "ec2_volume_type" {
   type    = string
   default = "gp2"
@@ -28,10 +19,17 @@ variable "ec2_volume_size" {
   default = 30
 }
 
-
-variable "ecs_asg_subnets" {
+variable "network_security_groups" {
   type = list(string)
 }
+variable "network_subnets" {
+  type        = list(string)
+  description = "subnets to deploy the resources over"
+}
+variable "network_vpc_id" {
+  type = string
+}
+
 variable "ecs_asg_desired_capacity" {
   type = number
 }
@@ -47,7 +45,6 @@ variable "ecs_asg_hc_grace_period" {
 variable "ecs_asg_hc_type" {
   type = string
 }
-
 variable "MONGO_HOST" {
   type      = string
   sensitive = true
@@ -59,5 +56,35 @@ variable "MONGO_PASSWORD" {
 variable "MONGO_USERNAME" {
   type      = string
   sensitive = true
+}
+
+variable "ssl_certificate_arn" {
+  type = string
+}
+
+variable "aws_region" {
+  type = string
+}
+
+variable "health_check_path" {
+  type = string
+}
+
+variable "key_pair_name" {
+  type = string
+}
+variable "key_pair_public_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "iam_ecs_service_role" {
+  type = string
+}
+variable "iam_ecs_instance_role" {
+  type = string
+}
+variable "iam_ecs_instance_profile" {
+  type = string
 }
 

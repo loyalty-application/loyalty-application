@@ -1,6 +1,9 @@
 variable "project_name" {
   type = string
 }
+variable "project_domain" {
+  type = string
+}
 variable "key_pair_name" {
   type = string
 }
@@ -19,6 +22,9 @@ variable "network_subnet_private_cidrs" {
   type = list(string)
 }
 variable "network_subnet_public_cidrs" {
+  type = list(string)
+}
+variable "network_nameservers" {
   type = list(string)
 }
 
@@ -55,6 +61,10 @@ variable "ecs_asg_hc_type" {
   type = string
 }
 
+variable "ssl_certificate_arn" {
+  type = string
+}
+
 variable "MONGO_HOST" {
   type      = string
   sensitive = true
@@ -67,3 +77,4 @@ variable "MONGO_USERNAME" {
   type      = string
   sensitive = true
 }
+

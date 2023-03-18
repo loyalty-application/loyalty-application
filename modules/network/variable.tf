@@ -1,6 +1,10 @@
 variable "project_name" {
   type = string
 }
+variable "project_domain" {
+  type = string
+}
+
 variable "network_subnet_availability_zones" {
   type        = list(string)
   description = "List of availability zones, with each element representing an aws availability zone"
@@ -22,3 +26,11 @@ variable "network_vpc_cidr" {
   default     = "10.0.0.0/20"
 }
 
+
+variable "aws_lb_dns_name" {
+  type = string
+}
+
+variable "network_nameservers" {
+    type = list(string)
+}
