@@ -1,6 +1,7 @@
 version: '3.1'
 
 services:
+<<<<<<< HEAD
   # mongo db container - mongodb
   mongo:
     container_name: mongo
@@ -10,6 +11,17 @@ services:
     ports:
       - 27017:27017
     profiles: [ "web" ]
+=======
+  # # mongo db container - mongodb
+  # mongo:
+  #   container_name: mongo
+  #   image: mongo
+  #   restart: always
+  #   env_file: ./.env
+  #   ports:
+  #     - 27017:27017
+  #   profiles: ["web"]
+>>>>>>> 0e5850542fa5c8dd17b75f626bc79e5a4d616600
 
   # mongo express container - UI for mongodb
   mongo-express:
@@ -21,6 +33,36 @@ services:
       - mongo
     ports:
       - 8085:8081
+    profiles: ["web"]
+  
+  # standalone mongodb container as replica set
+  mongo:
+    image: mongo
+    container_name: mongo
+    volumes:
+      - ./key:/opt/keyfile
+    env_file: ./.env
+    ports:
+      - 27017:27017
+    command: 'mongod --auth --keyFile /opt/keyfile --replSet replica-set'
+    profiles: ["web"]
+
+  # Initialization server
+  # To run rs.initiate() command 
+  mongoinit:
+    image: mongo
+    container_name: mongo-init
+    restart: on-failure
+    depends_on:
+      - mongo
+    command: >
+      bash -c '
+        sleep 10 &&
+        mongosh \
+          --host mongo:27017 \
+          --username root \
+          --password example \
+          --eval "rs.initiate()"'
     profiles: [ "web" ]
 
   # go-gin-backend container
@@ -40,6 +82,7 @@ services:
       - 8080:8080
     profiles: [ "web" ]
 
+  # go worker node container
   go-worker:
     container_name: go-worker
     image: go-worker:latest
@@ -53,10 +96,15 @@ services:
       - broker
       - mongo
     platform: linux/amd64
+<<<<<<< HEAD
     volumes:
       - ./go-worker-node:/worker
     profiles: [ "web", "kafka" ]
+=======
+    profiles: [ "kafka" ]
+>>>>>>> 0e5850542fa5c8dd17b75f626bc79e5a4d616600
 
+  
   broker:
     image: confluentinc/cp-kafka:latest
     container_name: broker
@@ -87,7 +135,11 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+<<<<<<< HEAD
     profiles: [ "kafka" ]
+=======
+    profiles: ['kafka']
+>>>>>>> 0e5850542fa5c8dd17b75f626bc79e5a4d616600
 
   broker2:
     image: confluentinc/cp-kafka:latest
@@ -153,7 +205,11 @@ services:
     volumes:
       - ./update_run.sh:/tmp/update_run.sh
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+<<<<<<< HEAD
     profiles: [ "kafka" ]
+=======
+    profiles: ['kafka']
+>>>>>>> 0e5850542fa5c8dd17b75f626bc79e5a4d616600
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
@@ -178,9 +234,14 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
+<<<<<<< HEAD
     profiles: [ "kafka" ]
 
   # schema-registry
+=======
+    profiles: ['kafka']
+    # schema-registry
+>>>>>>> 0e5850542fa5c8dd17b75f626bc79e5a4d616600
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.1
     container_name: schema-registry
