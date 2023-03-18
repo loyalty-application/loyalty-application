@@ -41,6 +41,7 @@ services:
     image: mongo
     container_name: mongo-init
     restart: on-failure
+    env_file: ./.env
     depends_on:
       - mongo
     command: >
@@ -48,8 +49,8 @@ services:
         sleep 10 &&
         mongosh \
           --host mongo:27017 \
-          --username root \
-          --password example \
+          --username ${MONGO_INITDB_ROOT_USERNAME} \
+          --password ${MONGO_INITDB_ROOT_PASSWORD} \
           --eval "rs.initiate()"'
     profiles: [ "web" ]
 
