@@ -35,19 +35,23 @@ services:
     command: 'mongod --auth --keyFile /opt/keyfile --replSet replica-set'
     profiles: ["web"]
 
-  # # Initialization server
-  # # To run rs.initiate() command 
-  # mongoinit:
-  #   image: mongo
-  #   container_name: mongo-init
-  #   restart: on-failure
-  #   depends_on:
-  #     - mongo
-  #   command: >
-  #     docker compose exec -it mongo mongosh -u "root" -p "example"
-  #     '
-  #     rs.initiate()
-  #     '
+  # Initialization server
+  # To run rs.initiate() command 
+  mongoinit:
+    image: mongo
+    container_name: mongo-init
+    restart: on-failure
+    depends_on:
+      - mongo
+    command: >
+      bash -c '
+        sleep 10 &&
+        mongosh \
+          --host mongo:27017 \
+          --username root \
+          --password example \
+          --eval "rs.initiate()"'
+    profiles: [ "web" ]
 
   # go-gin-backend container
   go-gin-backend:
