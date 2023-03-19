@@ -63,7 +63,7 @@ services:
     image: go-gin-backend:latest
     build:
       context: ./go-gin-backend
-      dockerfile: ./Dockerfile.dev
+      dockerfile: ./go-gin-backend/docker/Dockerfile.dev
     env_file: ./go-gin-backend/.env
     restart: always
     depends_on:
@@ -80,7 +80,7 @@ services:
     image: go-worker:latest
     build:
       context: ./go-worker-node
-      dockerfile: ./Dockerfile
+      dockerfile: ./docker/Dockerfile
     env_file:
       - ./go-worker-node/.env
     restart: always
@@ -93,6 +93,22 @@ services:
     profiles: [ "web", "kafka" ]
 
   
+  # go-sft-txn
+  go-sftp-txn:
+    container_name: go-sftp-txn
+    image: go-sftp-txn:latest
+    build:
+      context: ./go-sftp-txn
+      dockerfile: ./docker/Dockerfile
+    env_file: ./go-sftp-txn/.env
+    volumes:
+      - ./go-sftp-txn/data:/root/data
+    command: "2021-08-28"
+    depends_on:
+      - connect
+    profiles: [ "kafka" ]
+
+  # kafka broker 1
   broker:
     image: confluentinc/cp-kafka:latest
     container_name: broker
@@ -125,6 +141,7 @@ services:
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
     profiles: [ "kafka" ]
 
+  # kafka broker 2
   broker2:
     image: confluentinc/cp-kafka:latest
     container_name: broker2
@@ -158,6 +175,7 @@ services:
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
     profiles: [ "kafka" ]
 
+  # kafka broker 3
   broker3:
     image: confluentinc/cp-kafka:latest
     container_name: broker3
@@ -191,6 +209,7 @@ services:
     command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
     profiles: [ "kafka" ]
 
+  # kafka init scripts
   init-kafka:
     image: confluentinc/cp-kafka:7.3.1
     depends_on:
@@ -214,9 +233,9 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
-    profiles: [ "kafka" ]
+    profiles: ['kafka']
 
-  # schema-registry
+  # kafka schema-registry
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.1
     container_name: schema-registry
@@ -231,6 +250,7 @@ services:
     restart: always
     profiles: [ "kafka" ]
 
+  # kafka connect
   connect:
     image: cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
     hostname: connect
@@ -355,19 +375,23 @@ services:
       PORT: 9021
     profiles: [ "kafka" ]
 
-  sftptxn:
-    container_name: sftptxn
-    image: sftptxn:latest
-    build:
-      context: ./go-sftp-txn
-      dockerfile: ./Dockerfile
-    env_file: ./go-sftp-txn/.env
-    volumes:
-      - ./go-sftp-txn/data:/root/data
-    command: "2021-08-28"
+  # kafka connect-ui
+  kafka-connect-ui:
+    image: landoop/kafka-connect-ui:latest
+    hostname: kafka-connect-ui
+    # kafka-connect-ui binds to port 8000, but we are going to expose it on our local
+    # machine on port 8002.
+    ports:
+      - "8000:8000"
+    environment:
+      # Required. Instructs the UI where it can find Kafka Connect.
+      CONNECT_URL: "http://connect:8083/"
+      # This instructs the docker image to use Caddy to proxy traffic to kafka-connect-ui.
+      PROXY: "true"
+    # kafka-connect-ui relies upon Kafka Connect.
+    # This will instruct docker to wait until those services are up
+    # before attempting to start kafka-connect-ui.
     depends_on:
       - connect
-    profiles: [ "kafka" ]
+    profiles: ['kafka']
 
-volumes:
-  keyfile:
