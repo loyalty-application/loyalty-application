@@ -394,3 +394,5 @@ services:
       - connect
     profiles: ['kafka']
 
+volumes:
+  keyfile:
