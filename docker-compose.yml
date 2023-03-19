@@ -1,18 +1,6 @@
 version: '3.1'
 
 services:
-  # mongo express container - UI for mongodb
-  mongo-express:
-    container_name: mongo-express
-    image: mongo-express
-    restart: always
-    env_file: ./.env
-    depends_on:
-      - mongo
-    ports:
-      - 8085:8081
-    profiles: ["web"]
-  
   # mongo keyfile generator
   keyfile-generator:
     container_name: keyfile-generator
@@ -22,7 +10,7 @@ services:
     volumes:
       - keyfile:/keyfile
     profiles: [ "web" ]
-  
+
   # standalone mongodb container as replica set
   mongo:
     container_name: mongo
@@ -36,11 +24,11 @@ services:
     depends_on:
       - keyfile-generator
     command: 'mongod --auth --keyFile /keyfile/key --replSet replica-set'
-    profiles: ["web"]
+    profiles: [ "web" ]
 
   # Initialization server
   # To run rs.initiate() command 
-  mongoinit:
+  mongo-init:
     container_name: mongo-init
     image: mongo
     env_file: ./.env
@@ -56,13 +44,25 @@ services:
           --eval "rs.initiate()"'
     profiles: [ "web" ]
 
+  # mongo express container - UI for mongodb
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    restart: always
+    env_file: ./.env
+    depends_on:
+      - mongo
+    ports:
+      - 8085:8081
+    profiles: [ "web" ]
+
   # go-gin-backend container
   go-gin-backend:
     container_name: go-gin-backend
     image: go-gin-backend:latest
     build:
       context: ./go-gin-backend
-      dockerfile: ./go-gin-backend/docker/Dockerfile.dev
+      dockerfile: ./docker/Dockerfile.dev
     env_file: ./go-gin-backend/.env
     restart: always
     depends_on:
@@ -91,7 +91,6 @@ services:
       - ./go-worker-node:/worker
     profiles: [ "kafka" ]
 
-  
   # go-sft-txn
   go-sftp-txn:
     container_name: go-sftp-txn
@@ -232,7 +231,7 @@ services:
       "
     volumes:
       - ./run.sh:/run.sh
-    profiles: ['kafka']
+    profiles: [ 'kafka' ]
 
   # kafka schema-registry
   schema-registry:
@@ -392,7 +391,7 @@ services:
     # before attempting to start kafka-connect-ui.
     depends_on:
       - connect
-    profiles: ['kafka']
+    profiles: [ 'kafka' ]
 
 volumes:
   keyfile:
