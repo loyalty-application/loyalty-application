@@ -4,20 +4,53 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.16"
     }
+    mongodbatlas = {
+      source  = "mongodb/mongodbatlas"
+      version = "1.8.1"
+    }
   }
 
   required_version = ">= 1.2.0"
 }
 
-
 provider "aws" {
-  region = "ap-southeast-1"
+  region = var.project_region
+}
+provider "mongodbatlas" {}
+
+module "mongo" {
+  source = "../modules/mongo"
+  cluster = {
+    project_region = "AP_SOUTHEAST_1"
+    project_id     = "64170c0dd881410a0bafb29e"
+  }
+  cluster_network = {
+    vpc_id            = module.main-vpc.vpc_id
+    vpc_cidr          = "192.168.0.0/20"
+    public_subnet_ids = module.main-vpc.public_subnets
+    aws_account_id    = account_id
+
+  }
+}
+
+module "vpc" {
+  source                           = "terraform-aws-modules/vpc/aws"
+  name                             = "main-vpc"
+  cidr                             = "192.168.0.0/21"
+  azs                              = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
+  private_subnets                  = ["192.168.0.0/24", "192.168.1.0/24", "192.168.2.0/24"]
+  public_subnets                   = ["192.168.3.0/24", "192.168.4.0/24", "192.168.5.0/24"]
+  enable_nat_gateway               = false
+  enable_vpn_gateway               = false
+  enable_dhcp_options              = true
+  enable_dns_hostnames             = true
+  dhcp_options_domain_name_servers = ["AmazonProvidedDNS"]
 }
 
 
 # Network Setup
 module "network" {
-  source                            = "./modules/network"
+  source                            = "../modules/network"
   project_name                      = var.project_name
   project_domain                    = var.project_domain
   network_vpc_cidr                  = var.network_vpc_cidr
@@ -33,14 +66,14 @@ module "network" {
 
 # ECR Setup
 module "ecr" {
-  source   = "./modules/ecr"
+  source   = "../modules/ecr"
   ecr_name = var.ecr_name
 }
 
 
 # ecs using ec2
 module "ecs_ec2" {
-  source            = "./modules/ecs_ec2"
+  source            = "../modules/ecs_ec2"
   project_name      = var.project_name
   aws_region        = "ap-southeast-1"
   ec2_ami           = var.ec2_ami

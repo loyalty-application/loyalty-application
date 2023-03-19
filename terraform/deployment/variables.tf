@@ -4,13 +4,22 @@ variable "project_name" {
 variable "project_domain" {
   type = string
 }
+variable "project_region" {
+  type = string
+}
 variable "key_pair_name" {
+  type = string
+}
+variable "aws_account_id" {
   type = string
 }
 variable "key_pair_public_key" {
   type = string
 }
 
+variable "project_id" {
+  type = string
+}
 
 variable "network_vpc_cidr" {
   type = string
