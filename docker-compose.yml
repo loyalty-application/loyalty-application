@@ -25,25 +25,24 @@ services:
   
   # standalone mongodb container as replica set
   mongo:
-    image: mongo
     container_name: mongo
+    image: mongo
     restart: always
-    volumes:
-      - keyfile:/keyfile
     env_file: ./.env
     ports:
       - 27017:27017
-    command: 'mongod --auth --keyFile /keyfile/key --replSet replica-set'
+    volumes:
+      - keyfile:/keyfile
     depends_on:
       - keyfile-generator
+    command: 'mongod --auth --keyFile /keyfile/key --replSet replica-set'
     profiles: ["web"]
 
   # Initialization server
   # To run rs.initiate() command 
   mongoinit:
-    image: mongo
     container_name: mongo-init
-    restart: on-failure
+    image: mongo
     env_file: ./.env
     depends_on:
       - mongo
@@ -90,7 +89,7 @@ services:
     platform: linux/amd64
     volumes:
       - ./go-worker-node:/worker
-    profiles: [ "web", "kafka" ]
+    profiles: [ "kafka" ]
 
   
   broker:
