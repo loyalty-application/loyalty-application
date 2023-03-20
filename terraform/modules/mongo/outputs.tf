@@ -1,3 +1,5 @@
-output "private_srv" {
-    value = mongodbatlas_advanced_cluster.mongo_cluster.connection_strings[0].private_srv
+output "connection_strings" {
+  value = {
+    all = mongodbatlas_advanced_cluster.this.connection_strings
+  }
 }

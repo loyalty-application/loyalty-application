@@ -29,6 +29,7 @@ module "vpc" {
   enable_vpn_gateway   = false
   enable_dhcp_options  = true
   enable_dns_hostnames = true
+  enable_dns_support   = true
 }
 
 # create zones
@@ -66,6 +67,7 @@ resource "aws_route53_record" "this" {
   ttl             = 60
   type            = each.value.type
   zone_id         = aws_route53_zone.this.zone_id
+
 }
 resource "aws_acm_certificate_validation" "this" {
   certificate_arn         = aws_acm_certificate.this.arn
@@ -88,17 +90,32 @@ resource "aws_iam_role" "instance_role" {
   path                  = "/"
   assume_role_policy    = data.aws_iam_policy_document.ecs_instance_policy.json
   force_detach_policies = true
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 resource "aws_iam_role" "service_role" {
   name                  = "iam_role_ecs_service"
   path                  = "/"
   assume_role_policy    = data.aws_iam_policy_document.ecs_service_policy.json
   force_detach_policies = true
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 resource "aws_iam_instance_profile" "instance_profile" {
   name = "aws_iam_instance_profile"
   path = "/"
   role = aws_iam_role.instance_role.id
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 resource "aws_iam_role_policy_attachment" "instance" {
   role       = aws_iam_role.instance_role.name
@@ -109,4 +126,32 @@ resource "aws_iam_role_policy_attachment" "service" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
 }
 
-# TODO: create ecr
+locals {
+  project_names = ["nextjs-frontend", "go-gin-backend", "go-worker-node", "go-sftp-txn"]
+}
+
+module "ecr" {
+  source          = "terraform-aws-modules/ecr/aws"
+  version         = "1.6.0"
+  for_each        = toset(local.project_names)
+  repository_name = each.key
+  repository_lifecycle_policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1,
+        description  = "Keep last 30 images",
+        selection = {
+          tagStatus     = "tagged",
+          tagPrefixList = ["v"],
+          countType     = "imageCountMoreThan",
+          countNumber   = 30
+        },
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+  # set to false if true when destroying
+  repository_force_delete = false
+}

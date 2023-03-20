@@ -1,19 +1,26 @@
-variable "cluster" {
+variable "aws" {
+  sensitive = true
   type = object({
-    project_id     = string
-    project_region = string
+    region     = string
+    account_id = string
   })
 }
 
-variable "cluster_network" {
+variable "atlas" {
+  sensitive = true
   type = object({
-    vpc_id            = string
-    vpc_cidr          = string
+    project_name   = string
+    project_region = string
+    project_id     = string
+    username       = string
+    password       = string
+  })
+}
+
+variable "vpc" {
+  type = object({
+    id                = string
+    cidr              = string
     public_subnet_ids = list(string)
   })
-
-}
-
-variable "aws_account_id" {
-  type = string
 }

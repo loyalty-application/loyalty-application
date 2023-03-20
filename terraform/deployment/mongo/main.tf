@@ -20,15 +20,10 @@ provider "aws" {
 provider "mongodbatlas" {}
 
 module "mongo" {
-  source         = "../modules/mongo"
-  aws_account_id = var.aws.account_id
-  cluster = {
-    project_region = var.atlas.project_region
-    project_id     = var.atlas.project_id
-  }
-  cluster_network = {
-    vpc_id            = var.vpc.id
-    vpc_cidr          = var.vpc.cidr
-    public_subnet_ids = var.vpc.public_subnets
-  }
+  source = "../../modules/mongo"
+  aws    = var.aws
+  atlas  = var.atlas
+  vpc    = var.vpc
 }
+
+
