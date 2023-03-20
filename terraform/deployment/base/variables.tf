@@ -1,7 +1,12 @@
-variable "aws_config" {
+variable "project" {
   type = object({
-    region     = string
-    account_id = string
+    name = string
+  })
+
+}
+variable "aws" {
+  type = object({
+    region = string
   })
 }
 
@@ -18,4 +23,8 @@ variable "dns" {
   type = object({
     domain_name = string
   })
+}
+
+variable "key_pairs" {
+  type = map(string)
 }

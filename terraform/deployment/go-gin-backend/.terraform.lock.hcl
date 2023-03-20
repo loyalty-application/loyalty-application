@@ -23,25 +23,3 @@ provider "registry.terraform.io/hashicorp/aws" {
     "zh:fe8c2eae8c367d2cb7cade250a8d5f6c411ac4a8214c46df0a1fd90d9eaf7152",
   ]
 }
-
-provider "registry.terraform.io/mongodb/mongodbatlas" {
-  version     = "1.8.1"
-  constraints = "1.8.1"
-  hashes = [
-    "h1:KdgQ0Y9gGmo1Ub4/vpIqYquZwnuDSToWE2fRWKWdW0A=",
-    "zh:20f215631f3b3f7d084101fec199bb5cc1caec180c0eaa733f018ea8129b30bd",
-    "zh:2f74fb9c52f3365081dc53e59c05a52232b9d76a8d90cdd98e4934b11b83bd93",
-    "zh:630d4a5fdecccdb6c05e8442dbf1dada93b92e4dedb0815608b37234ffa1045e",
-    "zh:65500b9f28eda25d2bd15f5987efa061f77b59e72ea79272ec617d59eea3188e",
-    "zh:6808ec58fef6f51927c94b477421335d1a929601fa9be15c2fcab5dc19313d27",
-    "zh:6cd214848746e36071b3955a9de348a7129a3dd0ac24434509ebb178a62bad02",
-    "zh:7d5a758164457641f6c6aaf83b0721bbca340501661ce6b130528b09a0f70ab5",
-    "zh:adba5d37be235f99381b91bc06621861d744a070ab77875aa557b9b7c7844091",
-    "zh:c0022389ba4a9cf71da0f7baafb5237545bf734c17fab70f51eca75717fedda6",
-    "zh:c1e18975a0532b308fa5230eca09fcd687649de21c9680bf9d6baf5c9577e84d",
-    "zh:cd67e3bab36917a619a03729df8e3f6496148afc46628563c9ffaf9460da72cb",
-    "zh:d02e4480365896dc493aeee2fc67224486538b607d2202577fbfe2d34e8d902f",
-    "zh:eb42712114e6d4deb799e0350ce488651334ee166a7a23217371f71357879c00",
-    "zh:ebb9cdd9ce38c918cd6da924c9e1ee8aae0379dc0ac786c212f77ca414696076",
-  ]
-}

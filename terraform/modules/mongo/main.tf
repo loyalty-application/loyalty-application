@@ -4,8 +4,8 @@ terraform {
       source  = "mongodb/mongodbatlas"
       version = "1.8.1"
     }
-  }
 
+  }
   required_version = ">= 1.2.0"
 }
 resource "mongodbatlas_advanced_cluster" "mongo_cluster" {
@@ -69,12 +69,31 @@ data "aws_vpc_peering_connection" "vpc-peering-conn-ds" {
   peer_region = var.cluster.project_region
 }
 
-data "aws_route_table" "vpc-public-subnet-1-ds" {
-  subnet_id = var.cluster_network.public_subnet_ids[0]
-}
-#VPC Peer Device to ATLAS Route Table Association on AWS
-resource "aws_route" "aws_peer_to_atlas_route_1" {
-  route_table_id            = data.aws_route_table.vpc-public-subnet-1-ds.id
-  vpc_peering_connection_id = data.aws_vpc_peering_connection.vpc-peering-conn-ds.id
-  destination_cidr_block    = var.cluster_network.vpc_cidr
+#data "aws_route_table" "vpc-public-subnet-1-ds" {
+#subnet_id = var.cluster_network.public_subnet_ids[0]
+#}
+
+##VPC Peer Device to ATLAS Route Table Association on AWS
+#resource "aws_route" "aws_peer_to_atlas_route_1" {
+#route_table_id            = data.aws_route_table.vpc-public-subnet-1-ds.id
+#vpc_peering_connection_id = data.aws_vpc_peering_connection.vpc-peering-conn-ds.id
+#destination_cidr_block    = var.cluster_network.vpc_cidr
+#}
+
+resource "mongodbatlas_database_user" "this" {
+  username           = "admin"
+  password           = "password"
+  project_id         = var.cluster.project_id
+  auth_database_name = "mongo"
+
+  roles {
+    role_name     = "readAnyDatabase"
+    database_name = "admin"
+  }
+
+  scopes {
+    name = "mongo"
+    type = "CLUSTER"
+  }
+
 }
