@@ -42,23 +42,22 @@ resource "aws_msk_configuration" "this" {
   name           = "${local.project_name}-configuration"
 
   server_properties = <<PROPERTIES
-  auto.create.topics.enable=true
-  default.replication.factor=3
-  min.insync.replicas=1
-  num.io.threads=8
-  num.network.threads=5
-  num.partitions=20
-  num.replica.fetchers=2
-  replica.lag.time.max.ms=30000
-  socket.receive.buffer.bytes=102400
-  socket.request.max.bytes=104857600
-  socket.send.buffer.bytes=102400
-  unclean.leader.election.enable=true
-  zookeeper.session.timeout.ms=18000
-  group.initial.rebalance.delay.ms=0
+# HIGH ===============
+# advertised.listeners
+# broker.id
+min.insync.replicas=1
+# node.id
+offsets.topic.replication.factor=2
+# process.roles
+transaction.state.log.min.isr=1
+transaction.state.log.replication.factor=1
+# MEDIUM ===============
+default.replication.factor=3
+group.initial.rebalance.delay.ms=0
   PROPERTIES
 }
 
+# msk cluster deployment
 resource "aws_msk_cluster" "this" {
   # required
   cluster_name           = local.project_name
@@ -83,7 +82,7 @@ resource "aws_msk_cluster" "this" {
   open_monitoring {
     prometheus {
       jmx_exporter {
-        enabled_in_broker = false
+        enabled_in_broker = true
       }
       node_exporter {
         enabled_in_broker = false
@@ -103,6 +102,7 @@ resource "aws_msk_cluster" "this" {
 
 }
 
+# logs for msk
 resource "aws_cloudwatch_log_group" "this" {
   name = "${local.project_name}-broker-logs"
 }

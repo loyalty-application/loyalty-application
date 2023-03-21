@@ -149,6 +149,7 @@ services:
       - "9092:9092"
       - "9101:9101"
     environment:
+      # HIGH ==================================
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092 # PER BROKER
       KAFKA_BROKER_ID: 1 # READONLY
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER' # READONLY
@@ -159,11 +160,13 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # PER BROKER
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs' # READONLY
       KAFKA_MIN_INSYNC_REPLICAS: 1 # CLUSTER WIDE
-      KAFKA_NODE_ID: 1 # READONLY
+      KAFKA_NODE_ID: 1 # READONLY - KRaft
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2 # READONLY
-      KAFKA_PROCESS_ROLES: 'broker,controller' # READONLY
+      KAFKA_PROCESS_ROLES: 'broker,controller' # READONLY -> KRaft
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 # READONLY
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # READONLY
+
+      # MEDIUM ==================================
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3 # READONLY
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # READONLY
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT' # READONLY
@@ -336,6 +339,7 @@ services:
       - ./go-sftp-txn/data:/data
     profiles: [ "kafka" ]
 
+  # kafka connect
   connect1:
     image: cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
     hostname: connect1
@@ -387,6 +391,7 @@ services:
       - ./go-sftp-txn/data:/data
     profiles: [ "kafka" ]
 
+  # kafka control center
   control-center:
     image: confluentinc/cp-enterprise-control-center:7.3.1
     container_name: control-center

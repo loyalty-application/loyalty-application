@@ -1,0 +1,12 @@
+# aws configs
+aws = {
+  region = "ap-southeast-1"
+}
+
+# vpc configs
+vpc = {
+  id                 = "vpc-id-from-base"
+  cidr               = "10.0.0.0/16"
+  private_subnet_ids = ["private-subnet-ids-from-base"]
+  public_subnet_ids  = ["public-subnet-ids-from-base"]
+}
