@@ -19,8 +19,8 @@ variable "atlas" {
 
 variable "vpc" {
   type = object({
-    id                = string
-    cidr              = string
-    public_subnet_ids = list(string)
+    id      = string
+    cidr    = string
+    subnets = list(string)
   })
 }

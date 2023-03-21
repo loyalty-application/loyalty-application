@@ -97,7 +97,7 @@ data "aws_vpc_peering_connections" "this" {
 
 # find the route_table for the subnet we're using for the peering
 data "aws_route_table" "this" {
-  subnet_id = var.vpc.public_subnet_ids[0]
+  subnet_id = var.vpc.subnets[0]
 }
 
 # create route on aws_route_table for atlas vpc
