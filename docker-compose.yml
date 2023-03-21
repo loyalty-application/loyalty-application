@@ -91,6 +91,7 @@ services:
     volumes:
       - ./go-worker-node:/worker
     profiles: [ "kafka" ]
+    
 
   go-worker2:
     container_name: go-worker2
@@ -414,32 +415,13 @@ services:
       CONTROL_CENTER_KSQL_KSQLDB1_URL: "http://ksqldb-server:8088"
       CONTROL_CENTER_KSQL_KSQLDB1_ADVERTISED_URL: "http://localhost:8088"
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_CONNECT_CONNECT: "connect:8083"
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
     profiles: [ "kafka" ]
-
-  # kafka connect-ui
-  kafka-connect-ui:
-    image: landoop/kafka-connect-ui:latest
-    hostname: kafka-connect-ui
-    # kafka-connect-ui binds to port 8000, but we are going to expose it on our local
-    # machine on port 8002.
-    ports:
-      - "8000:8000"
-    environment:
-      # Required. Instructs the UI where it can find Kafka Connect.
-      CONNECT_URL: "http://connect:8083/"
-      # This instructs the docker image to use Caddy to proxy traffic to kafka-connect-ui.
-      PROXY: "true"
-    # kafka-connect-ui relies upon Kafka Connect.
-    # This will instruct docker to wait until those services are up
-    # before attempting to start kafka-connect-ui.
-    depends_on:
-      - connect
-    profiles: [ 'kafka' ]
 
 volumes:
   keyfile:
