@@ -137,7 +137,7 @@ services:
     env_file: ./go-sftp-txn/.env
     volumes:
       - ./go-sftp-txn/data:/root/data
-    command: "2021-08-28"
+    command: "2021-08-27"
     depends_on:
       - connect
     profiles: [ "kafka" ]
@@ -305,7 +305,7 @@ services:
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      # CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
       #CONNECT_EXACTLY_ONCE_SOURCE_SUPPORT:
 
@@ -332,7 +332,7 @@ services:
       - bash
       - -c
       - |
-        echo "Installing connector plugins"
+        chmod 777 /data && chmod 777 /data/* && echo "Installing connector plugins"
         # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
         confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
         # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
@@ -384,7 +384,7 @@ services:
       - bash
       - -c
       - |
-        echo "Installing connector plugins"
+        chmod 777 /data && chmod 777 /data/* && echo "Installing connector plugins"
         # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
         confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
         # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
