@@ -5,3 +5,7 @@ output "cp" {
 output "cluster" {
   value = aws_ecs_cluster.this
 }
+
+output "asg" {
+  value = aws_autoscaling_group.this
+}

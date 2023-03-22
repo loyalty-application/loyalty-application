@@ -13,6 +13,13 @@ variable "aws" {
   })
 }
 
+# certificate 
+variable "certificate" {
+  type = object({
+    arn = string
+  })
+}
+
 # key pair name - for ec2
 variable "key_pair" {
   type = object({
@@ -45,6 +52,20 @@ variable "ecs" {
   })
 }
 
+variable "tg" {
+  type = object({
+    hc = object({
+      path                = string
+      protocol            = string
+      interval            = number
+      matcher             = number
+      healthy_threshold   = number
+      unhealthy_threshold = number
+    })
+  })
+}
+
+
 # iam roles
 variable "iam" {
   type = object({
@@ -69,11 +90,5 @@ variable "dns" {
     zone = object({
       id = string
     })
-  })
-}
-
-variable "efs" {
-  type = object({
-    file_system_id = string
   })
 }

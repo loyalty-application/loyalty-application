@@ -50,3 +50,9 @@ resource "aws_lb_listener" "this" {
   }
 }
 
+
+# attach asg to lb
+resource "aws_autoscaling_attachment" "tg_lb_attachement" {
+  autoscaling_group_name = var.ecs.asg.id
+  lb_target_group_arn    = aws_lb_target_group.this.arn
+}

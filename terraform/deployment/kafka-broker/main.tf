@@ -51,23 +51,47 @@ module "ecs_ec2" {
 
 # local variables
 locals {
-  container_port  = 8083
-  container_name  = "${var.project.name}-container"
-  container_image = "cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0"
+  container_name  = "broker2"
+  container_image = "confluentinc/cp-kafka:latest"
 }
+
+## kafka broker 2
+#broker2:
+#image: confluentinc/cp-kafka:latest
+#container_name: broker2
+#depends_on:
+#- broker
+#ports:
+#- "9093:9092"
+#- "9102:9101"
+#environment:
+#KAFKA_BROKER_ID: 2
+#KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:29092,PLAINTEXT_HOST://localhost:9093
+#KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+#KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+#KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#KAFKA_JMX_PORT: 9101
+#KAFKA_JMX_HOSTNAME: localhost
+#KAFKA_PROCESS_ROLES: 'broker,controller'
+#KAFKA_NODE_ID: 2
+#KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093,2@broker2:29093,3@broker3:29093'
+#KAFKA_LISTENERS: 'PLAINTEXT://broker2:29092,CONTROLLER://broker2:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+#KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+#KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+#KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+#KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+#KAFKA_MIN_INSYNC_REPLICAS: 1
+#restart: always
+#volumes:
+#- ./update_run.sh:/tmp/update_run.sh
+#command: ""
+#profiles: [ "kafka" ]
 
 # ecs task definition
 resource "aws_ecs_task_definition" "this" {
-
   family = "${var.project.name}-task-def"
-  volume {
-    name = "efsVolume"
-    efs_volume_configuration {
-      transit_encryption = "DISABLED"
-      file_system_id     = var.efs.file_system_id
-      root_directory     = "/"
-    }
-  }
   container_definitions = jsonencode([
     {
       name              = local.container_name
@@ -76,24 +100,19 @@ resource "aws_ecs_task_definition" "this" {
       memoryReservation = 256
       portMappings = [
         {
-          containerPort = local.container_port
-          hostPort      = 0
+          containerPort = 9092
+          hostPort      = 9093
+        },
+        {
+          containerPort = 9101
+          hostPort      = 9102
         }
-      ]
+      ],
+      volumes = [],
       environment = [
         for k, v in var.ENV : { name = k, value = v }
-      ]
-      command = [
-        # chmod 777 /data && chmod 777 /data/* && 
-        "sh", "-c", "confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65 && (/etc/confluent/docker/run &) && tail -f /dev/null"
-        # && sleep infinity
-      ]
-      mountPoints : [
-        {
-          sourceVolume  = "efsVolume",
-          containerPath = "/data",
-        }
-      ]
+      ],
+      command = ["bash", "-c", "sed -i '/KAFKA_ZOOKEEPER_CONNECT/d' /etc/confluent/docker/configure && sed -i 's/cub zk-ready/echo ignore zk-ready/' /etc/confluent/docker/ensure && echo \"kafka-storage format --ignore-formatted --cluster-id=NqnEdODVKkiLTfJvqd1uqQ== -c /etc/kafka/kafka.properties\" >> /etc/confluent/docker/ensure && /etc/confluent/docker/run"],
     }
   ])
 }

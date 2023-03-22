@@ -25,6 +25,14 @@ variable "tg" {
   })
 }
 
+variable "ecs" {
+  type = object({
+    asg = object({
+      id = string
+    })
+  })
+}
+
 variable "lb" {
   type = object({
     security_group_ids = list(string)

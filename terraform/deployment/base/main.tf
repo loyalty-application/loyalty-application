@@ -16,6 +16,26 @@ locals {
   project_name = var.project.name
 }
 
+# create security groups
+resource "aws_security_group" "this" {
+  name   = "${var.project.name}-sg"
+  vpc_id = module.vpc.vpc_id
+  ingress {
+    description = "allow all"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
 # create vpc
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
@@ -155,3 +175,17 @@ module "ecr" {
   # set to false if true when destroying
   repository_force_delete = false
 }
+
+# create efs 
+resource "aws_efs_file_system" "this" {
+  creation_token = "${local.project_names[0]}-fs"
+}
+
+# create mount target 
+resource "aws_efs_mount_target" "this" {
+  count           = length(module.vpc.public_subnets)
+  subnet_id       = module.vpc.public_subnets[count.index]
+  file_system_id  = aws_efs_file_system.this.id
+  security_groups = [aws_security_group.this.id]
+}
+

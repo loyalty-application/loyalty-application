@@ -5,12 +5,6 @@ variable "project" {
   })
 }
 
-# environment variables to pass to task definition
-variable "ENV" {
-  sensitive = true
-  type      = map(string)
-}
-
 # iam roles required by service
 variable "iam" {
   type = object({
@@ -23,6 +17,10 @@ variable "ecs" {
   type = object({
     cluster = object({
       id = string
+    })
+    task = object({
+      definition     = string
+      container_port = number
     })
   })
 }
@@ -40,3 +38,4 @@ variable "cp" {
     name = string
   })
 }
+

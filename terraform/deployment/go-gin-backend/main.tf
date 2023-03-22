@@ -32,47 +32,89 @@ resource "aws_security_group" "this" {
   }
 }
 
+# ecs using ec2
+module "ecs_ec2" {
+  source  = "../../modules/ecs-ec2-cluster"
+  project = var.project
+  vpc = merge(
+    var.vpc,
+    { subnets = var.vpc.public_subnet_ids }
+  )
+  ecs = merge(
+    var.ecs,
+    { security_group_ids = [aws_security_group.this.id] }
+  )
+
+  key_pair = var.key_pair
+  iam      = var.iam
+}
+
 # create lb and tg for ecs cluster
 module "lb_tg" {
-  source  = "../../modules/lb-tg"
+  source  = "../../modules/ecs-ec2-lb-tg"
   project = var.project
   vpc = merge(
     { subnets = var.vpc.public_subnet_ids },
     var.vpc
   )
+  ecs = { asg = { id = module.ecs_ec2.asg.id } }
 
+  # remove below if you don't need lb-tg
   tg          = var.tg
   lb          = { security_group_ids = [aws_security_group.this.id] }
   certificate = var.certificate
 }
 
-# ecs using ec2
-module "ecs_ec2" {
-  source  = "../../modules/ecs-ec2"
-  project = var.project
-  vpc = merge(
-    { subnets = var.vpc.public_subnet_ids },
-    var.vpc
-  )
-  ecs = merge(
-    { security_group_ids = [aws_security_group.this.id] },
-    { tg_arn = module.lb_tg.tg.arn },
-    var.ecs
-  )
-  key_pair = var.key_pair
-  iam      = var.iam
+locals {
+  container_image = "docker.io/loyaltyapplication/go-gin-backend:latest"
+  container_port  = 8080
 }
 
-# local service and task definition
-module "ecs_service_task" {
-  source  = "./service"
-  project = var.project
-  iam     = var.iam
-  ENV     = var.ENV
-  ecs     = { cluster = { id = module.ecs_ec2.cluster.id } }
-  tg      = { arn = module.lb_tg.tg.arn }
-  cp      = { name = module.ecs_ec2.cp.name }
+# ecs task definition
+resource "aws_ecs_task_definition" "this" {
+  family = "${var.project.name}-task-def"
+  container_definitions = jsonencode([
+    {
+      name              = "${var.project.name}-container"
+      image             = local.container_image
+      essential         = true
+      memoryReservation = 256
+      portMappings = [
+        {
+          containerPort = local.container_port
+          hostPort      = 0
+        }
+      ],
+      environment = [
+        for k, v in var.ENV : { name = k, value = v }
+      ]
+    }
+  ])
 }
+
+# ecs service
+resource "aws_ecs_service" "this" {
+  name                 = "${var.project.name}-service"
+  cluster              = module.ecs_ec2.cluster.id
+  task_definition      = aws_ecs_task_definition.this.arn
+  iam_role             = var.iam.service_role_arn
+  desired_count        = 1
+  force_new_deployment = true
+
+  capacity_provider_strategy {
+    base              = 1
+    weight            = 100
+    capacity_provider = module.ecs_ec2.cp.name
+  }
+
+  # remove this if you don't need lb-tg
+  load_balancer {
+    target_group_arn = module.lb_tg.tg.arn
+    container_name   = "${var.project.name}-container"
+    container_port   = local.container_port
+  }
+}
+
 
 # add CNAME record for route53
 resource "aws_route53_record" "this" {

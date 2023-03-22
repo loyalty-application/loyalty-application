@@ -26,8 +26,7 @@ resource "aws_launch_template" "this" {
   key_name               = var.key_pair.name
 
   user_data = base64encode(templatefile("${path.module}/user-data.tpl", {
-    ECS_CLUSTER = aws_ecs_cluster.this.name,
-    TG_ARN      = var.ecs.tg_arn
+    ECS_CLUSTER = aws_ecs_cluster.this.name
   }))
 
   iam_instance_profile {
@@ -75,10 +74,6 @@ resource "aws_ecs_capacity_provider" "this" {
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.this.arn
-    # decides whether to terminate aka delete the instances when they scale in
-    #managed_termination_protection = "ENABLED"
-
-    # TODO: enable these and allow variables 
     #managed_scaling {
     #maximum_scaling_step_size = 1000
     #minimum_scaling_step_size = 1
@@ -95,8 +90,3 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
   capacity_providers = [aws_ecs_capacity_provider.this.name]
 }
 
-# attach asg to lb
-resource "aws_autoscaling_attachment" "tg_lb_attachement" {
-  autoscaling_group_name = aws_autoscaling_group.this.id
-  lb_target_group_arn    = var.ecs.tg_arn
-}

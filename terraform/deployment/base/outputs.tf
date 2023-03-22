@@ -41,3 +41,10 @@ output "iam" {
     }
   }
 }
+
+output "efs" {
+  value = {
+    mount_target = aws_efs_mount_target.this
+    file_system  = aws_efs_file_system.this
+  }
+}

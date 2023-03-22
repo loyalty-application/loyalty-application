@@ -18,12 +18,12 @@ locals {
 }
 
 resource "aws_security_group" "this" {
-  name   = "${local.project_name}-sg"
+  name   = "${local.project_name}-sg-msk"
   vpc_id = var.vpc.id
   ingress {
     description = "TLS from VPC"
     from_port   = 0
-    to_port     = 0
+    to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -64,7 +64,7 @@ resource "aws_msk_cluster" "this" {
   kafka_version          = local.kafka_version
   number_of_broker_nodes = 3
   broker_node_group_info {
-    instance_type  = "kafka.t3.small"
+    instance_type  = "kafka.m5.large"
     client_subnets = var.vpc.subnets
     storage_info {
       ebs_storage_info {
@@ -77,6 +77,12 @@ resource "aws_msk_cluster" "this" {
   configuration_info {
     arn      = aws_msk_configuration.this.arn
     revision = aws_msk_configuration.this.latest_revision
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
   }
 
   open_monitoring {
@@ -100,10 +106,10 @@ resource "aws_msk_cluster" "this" {
   }
 }
 
-## logs for msk
-#resource "aws_cloudwatch_log_group" "this" {
-#name = "${local.project_name}-broker-logs"
-#}
+# logs for msk
+resource "aws_cloudwatch_log_group" "this" {
+  name = "${local.project_name}-broker-logs"
+}
 
 ## create s3 bucket to upload connector to
 #resource "aws_s3_bucket" "this" {

@@ -24,7 +24,6 @@ variable "vpc" {
 variable "ecs" {
   type = object({
     instance_type      = string
-    tg_arn             = string
     security_group_ids = list(string)
     asg = object({
       desired_capacity = number
