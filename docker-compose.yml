@@ -91,7 +91,6 @@ services:
     volumes:
       - ./go-worker-node:/worker
     profiles: [ "kafka" ]
-    
 
   go-worker2:
     container_name: go-worker2
@@ -249,26 +248,16 @@ services:
 
   # kafka init scripts
   init-kafka:
-    image: confluentinc/cp-kafka:7.3.1
+    image: init-kafka:latest
+    build:
+      context: .
+      dockerfile: ./init-kafka/Dockerfile
     depends_on:
       - broker
       - connect
-    entrypoint: [ '/bin/sh', '-c' ]
-    command: |
-      "
-      # blocks until kafka is reachable
-      kafka-topics --bootstrap-server broker:29092 --list
-
-      echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic ftptransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2
-      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic resttransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2
-
-      echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server broker:29092 --list
-      chmod +x /run.sh
-      /run.sh
-      exit 0
-      "
+    environment:
+      BOOTSTRAP_SERVERS: broker:29092
+      CONNECTOR_HOST: connect:8083
     volumes:
       - ./run.sh:/run.sh
     profiles: [ 'kafka' ]

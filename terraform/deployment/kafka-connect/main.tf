@@ -60,6 +60,7 @@ locals {
 resource "aws_ecs_task_definition" "this" {
 
   family = "${var.project.name}-task-def"
+
   volume {
     name = "efsVolume"
     efs_volume_configuration {
@@ -74,6 +75,7 @@ resource "aws_ecs_task_definition" "this" {
       image             = local.container_image
       essential         = true
       memoryReservation = 256
+      privileged        = true
       portMappings = [
         {
           containerPort = local.container_port
@@ -85,8 +87,7 @@ resource "aws_ecs_task_definition" "this" {
       ]
       command = [
         # chmod 777 /data && chmod 777 /data/* && 
-        "sh", "-c", "confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65 && (/etc/confluent/docker/run &) && tail -f /dev/null"
-        # && sleep infinity
+        "sh", "-c", "chmod 777 /data && chmod 777 /data/* && confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65 && (/etc/confluent/docker/run &) && tail -f /dev/null"
       ]
       mountPoints : [
         {
