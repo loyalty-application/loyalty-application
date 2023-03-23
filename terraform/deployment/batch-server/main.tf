@@ -37,7 +37,7 @@ module "ecs_ec2" {
   source  = "../../modules/ecs-ec2-cluster"
   project = var.project
   vpc = merge(
-    { subnets = var.vpc.public_subnet_ids },
+    { subnets = var.vpc.private_subnet_ids },
     var.vpc
   )
   ecs = merge(
@@ -47,6 +47,36 @@ module "ecs_ec2" {
 
   key_pair = var.key_pair
   iam      = var.iam
+}
+
+# ecs task definition
+resource "aws_ecs_task_definition" "init_kafka" {
+  family = "init-kafka-task-def"
+  volume {
+    name = "efsVolume"
+    efs_volume_configuration {
+      transit_encryption = "DISABLED"
+      file_system_id     = var.efs.file_system_id
+      root_directory     = "/"
+    }
+  }
+  network_mode = "awsvpc"
+  container_definitions = jsonencode([
+    {
+      name              = "init-kafka-container"
+      image             = "docker.io/loyaltyapplication/init-kafka:latest"
+      memoryReservation = 256
+      environment = [
+        for k, v in var.ENV : { name = k, value = v }
+      ]
+      mountPoints : [
+        {
+          sourceVolume  = "efsVolume",
+          containerPath = "/data",
+        }
+      ]
+    }
+  ])
 }
 
 # ecs task definition
@@ -86,44 +116,13 @@ module "ecs_ec2" {
 #])
 #}
 
-
-# ecs task definition
-resource "aws_ecs_task_definition" "init_kafka" {
-  family = "init-kafka-task-def"
-  volume {
-    name = "efsVolume"
-    efs_volume_configuration {
-      transit_encryption = "DISABLED"
-      file_system_id     = var.efs.file_system_id
-      root_directory     = "/"
-    }
-  }
-  network_mode = "awsvpc"
-  container_definitions = jsonencode([
-    {
-      name              = "init-kafka-container"
-      image             = "docker.io/loyaltyapplication/init-kafka:latest"
-      memoryReservation = 512
-      environment = [
-        for k, v in var.ENV : { name = k, value = v }
-      ]
-      mountPoints : [
-        {
-          sourceVolume  = "efsVolume",
-          containerPath = "/data",
-        }
-      ]
-    }
-  ])
-}
-
 # onetime tasks
 data "aws_ecs_task_execution" "this" {
   cluster         = module.ecs_ec2.cluster.id
   task_definition = aws_ecs_task_definition.init_kafka.arn
   desired_count   = 1
   network_configuration {
-    subnets         = var.vpc.public_subnet_ids
+    subnets         = var.vpc.private_subnet_ids
     security_groups = [aws_security_group.this.id]
   }
   capacity_provider_strategy {
