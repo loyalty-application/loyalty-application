@@ -49,6 +49,22 @@ module "ecs_ec2" {
   iam      = var.iam
 }
 
+# create lb and tg for ecs cluster
+module "lb_tg" {
+  source  = "../../modules/ecs-ec2-lb-tg"
+  project = var.project
+  vpc = merge(
+    { subnets = var.vpc.public_subnet_ids },
+    var.vpc
+  )
+  ecs = { asg = { id = module.ecs_ec2.asg.id } }
+
+  # remove below if you don't need lb-tg
+  tg          = var.tg
+  lb          = { security_group_ids = [aws_security_group.this.id] }
+  certificate = var.certificate
+}
+
 # local variables
 locals {
   container_port  = 8083
@@ -75,7 +91,7 @@ resource "aws_ecs_task_definition" "this" {
       image             = local.container_image
       essential         = true
       memoryReservation = 256
-      privileged        = true
+      #privileged        = true
       portMappings = [
         {
           containerPort = local.container_port
@@ -87,7 +103,7 @@ resource "aws_ecs_task_definition" "this" {
       ]
       command = [
         # chmod 777 /data && chmod 777 /data/* && 
-        "sh", "-c", "chmod 777 /data && chmod 777 /data/* && confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65 && (/etc/confluent/docker/run &) && tail -f /dev/null"
+        "sh", "-c", "confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65 && (/etc/confluent/docker/run &) && tail -f /dev/null"
       ]
       mountPoints : [
         {
@@ -106,9 +122,27 @@ resource "aws_ecs_service" "ecs_service" {
   task_definition      = aws_ecs_task_definition.this.arn
   desired_count        = 1
   force_new_deployment = true
+
   capacity_provider_strategy {
     base              = 1
     weight            = 100
     capacity_provider = module.ecs_ec2.cp.name
   }
+
+  # remove this if you don't need lb-tg
+  load_balancer {
+    target_group_arn = module.lb_tg.tg.arn
+    container_name   = "${var.project.name}-container"
+    container_port   = local.container_port
+  }
+}
+
+
+# add CNAME record for route53
+resource "aws_route53_record" "this" {
+  zone_id = var.dns.zone.id
+  name    = var.project.name
+  type    = "CNAME"
+  ttl     = 5
+  records = [module.lb_tg.lb.dns_name]
 }

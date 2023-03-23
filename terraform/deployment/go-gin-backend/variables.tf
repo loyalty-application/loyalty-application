@@ -54,6 +54,7 @@ variable "ecs" {
 
 variable "tg" {
   type = object({
+    port = number
     hc = object({
       path                = string
       protocol            = string

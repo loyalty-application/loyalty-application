@@ -77,3 +77,26 @@ variable "efs" {
     file_system_id = string
   })
 }
+
+
+variable "tg" {
+  type = object({
+    port = number
+    hc = object({
+      path                = string
+      protocol            = string
+      interval            = number
+      matcher             = number
+      healthy_threshold   = number
+      unhealthy_threshold = number
+    })
+  })
+}
+
+# certificate 
+variable "certificate" {
+  type = object({
+    arn = string
+  })
+}
+

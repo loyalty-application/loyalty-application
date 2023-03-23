@@ -1,4 +1,4 @@
-curl -i --max-time 60 --retry-connrefused --retry 10 -X PUT -H "Accept:application/json" -H  "Content-Type:application/json" http://$CONNECTOR_HOST/connectors/source-csv-spooldir-03/config -d '{
+curl -i --max-time 60 --retry-connrefused --retry 10 -X PUT -H "Accept:application/json" -H  "Content-Type:application/json" $CONNECTOR_HOST/connectors/source-csv-spooldir-03/config -d '{
   "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
   "tasks.max": "2",
   "producer.acks":"1",

@@ -257,7 +257,7 @@ services:
       - connect
     environment:
       BOOTSTRAP_SERVERS: broker:29092
-      CONNECTOR_HOST: connect:8083
+      CONNECTOR_HOST: http://connect:8083
     volumes:
       - ./run.sh:/run.sh
     profiles: [ 'kafka' ]
@@ -294,7 +294,7 @@ services:
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-      # CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
       #CONNECT_EXACTLY_ONCE_SOURCE_SUPPORT:
 

@@ -86,10 +86,6 @@ module "ecs_ec2" {
 #])
 #}
 
-locals {
-  BOOTSTRAP_SERVERS = var.ENV["BOOTSTRAP_SERVERS"]
-}
-
 
 # ecs task definition
 resource "aws_ecs_task_definition" "init_kafka" {
@@ -97,15 +93,11 @@ resource "aws_ecs_task_definition" "init_kafka" {
   network_mode = "awsvpc"
   container_definitions = jsonencode([
     {
-
       name              = "init-kafka-container"
-      image             = "confluentinc/cp-kafka:7.3.1"
+      image             = "docker.io/loyaltyapplication/init-kafka:latest"
       memoryReservation = 256
       environment = [
         for k, v in var.ENV : { name = k, value = v }
-      ]
-      command = [
-        "sh", "-c", "kafka-topics --bootstrap-server ${local.BOOTSTRAP_SERVERS} --create --if-not-exists --topic ftptransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2 && kafka-topics --bootstrap-server ${local.BOOTSTRAP_SERVERS} --create --if-not-exists --topic resttransactions --replication-factor 3 --partitions 10 --config min.insync.replicas=2 && kafka-topics --bootstrap-server ${local.BOOTSTRAP_SERVERS} --list "
       ]
     }
   ])
