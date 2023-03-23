@@ -49,7 +49,7 @@ module "ecs_ec2" {
   iam      = var.iam
 }
 
-## ecs task definition
+# ecs task definition
 #resource "aws_ecs_task_definition" "this" {
 #family = "${var.project.name}-task-def"
 #volume {
@@ -89,15 +89,29 @@ module "ecs_ec2" {
 
 # ecs task definition
 resource "aws_ecs_task_definition" "init_kafka" {
-  family       = "init-kafka-task-def"
+  family = "init-kafka-task-def"
+  volume {
+    name = "efsVolume"
+    efs_volume_configuration {
+      transit_encryption = "DISABLED"
+      file_system_id     = var.efs.file_system_id
+      root_directory     = "/"
+    }
+  }
   network_mode = "awsvpc"
   container_definitions = jsonencode([
     {
       name              = "init-kafka-container"
       image             = "docker.io/loyaltyapplication/init-kafka:latest"
-      memoryReservation = 256
+      memoryReservation = 512
       environment = [
         for k, v in var.ENV : { name = k, value = v }
+      ]
+      mountPoints : [
+        {
+          sourceVolume  = "efsVolume",
+          containerPath = "/data",
+        }
       ]
     }
   ])
