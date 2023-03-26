@@ -1,9 +1,10 @@
 output "vpc" {
+  value = module.vpc
+}
+
+output "sg" {
   value = {
-    id              = module.vpc.vpc_id
-    cidr            = module.vpc.vpc_cidr_block
-    public_subnets  = module.vpc.public_subnets
-    private_subnets = module.vpc.private_subnets
+    allow_all_sg = aws_security_group.this
   }
 }
 
@@ -22,7 +23,6 @@ output "certificate" {
 
 output "key_pairs" {
   value = {
-
     names = [for kp in aws_key_pair.this : kp.key_name]
     arns  = [for kp in aws_key_pair.this : kp.arn]
   }
@@ -47,4 +47,8 @@ output "efs" {
     mount_target = aws_efs_mount_target.this
     file_system  = aws_efs_file_system.this
   }
+}
+
+output "ecs" {
+  value = var.ecs
 }

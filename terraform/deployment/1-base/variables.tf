@@ -28,3 +28,16 @@ variable "dns" {
 variable "key_pairs" {
   type = map(string)
 }
+
+variable "ecs" {
+  type = map(
+    object({
+      instance_type = string
+      asg = object({
+        desired_capacity = number
+        max_size         = number
+        min_size         = number
+      })
+    })
+  )
+}

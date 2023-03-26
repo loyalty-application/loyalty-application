@@ -12,40 +12,31 @@ provider "aws" {
   region = var.aws.region
 }
 
-# create security groups
-resource "aws_security_group" "this" {
-  name   = "${var.project.name}-sg"
-  vpc_id = var.vpc.id
-  ingress {
-    description = "allow all"
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+data "terraform_remote_state" "base" {
+  backend = "local"
+  config = {
+    path = "../base/terraform.tfstate"
   }
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+}
+
+locals {
+  project = { name = "batch-server" }
 }
 
 # ecs using ec2
 module "ecs_ec2" {
   source  = "../../modules/ecs-ec2-cluster"
-  project = var.project
-  vpc = merge(
-    { subnets = var.vpc.private_subnet_ids },
-    var.vpc
-  )
+  project = local.project
+  vpc = {
+    subnets = data.terraform_remote_state.base.outputs.vpc.public_subnets
+    id      = data.terraform_remote_state.base.outputs.vpc.vpc_id
+  }
   ecs = merge(
-    { security_group_ids = [aws_security_group.this.id] },
-    var.ecs
+    { security_group_ids = [data.terraform_remote_state.base.outputs.sg.allow_all_sg.id] },
+    data.terraform_remote_state.base.outputs.ecs["batch-server"]
   )
 
-  key_pair = var.key_pair
+  key_pair = { name = data.terraform_remote_state.base.outputs.key_pairs.names[0] }
   iam      = var.iam
 }
 
@@ -86,7 +77,7 @@ data "aws_ecs_task_execution" "this" {
   desired_count   = 1
   network_configuration {
     subnets         = var.vpc.private_subnet_ids
-    security_groups = [aws_security_group.this.id]
+    security_groups = [data.terraform_remote_state.base.outputs.sg.allow_all_sg.id]
   }
   capacity_provider_strategy {
     base              = 1
