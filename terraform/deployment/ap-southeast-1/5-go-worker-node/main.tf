@@ -50,6 +50,7 @@ locals {
   docdb_host            = local.region.docdb.cluster.endpoint
   docdb_username        = local.region.docdb.cluster.master_username
   docdb_password        = local.region.docdb.cluster.master_password
+  docdb_port            = tostring(local.region.docdb.cluster.port)
   msk_connection_string = local.msk.msk.bootstrap_brokers
 }
 
@@ -140,6 +141,7 @@ resource "aws_ecs_task_definition" "this" {
           { name = "MONGO_HOST", value = local.docdb_host },
           { name = "MONGO_USERNAME", value = local.docdb_username },
           { name = "MONGO_PASSWORD", value = local.docdb_password },
+          { name = "MONGO_PORT", value = local.docdb_port },
           { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string }
         ]
       )

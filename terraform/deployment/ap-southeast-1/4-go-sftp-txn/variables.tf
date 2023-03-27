@@ -3,9 +3,7 @@ variable "SFTP_URL" {
   sensitive   = true
   type        = string
   description = "SFTP URL to pull files from"
-
 }
-
 
 # optional variables
 #project

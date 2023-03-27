@@ -46,9 +46,3 @@ output "docdb" {
   }
 }
 
-output "cloudwatch" {
-  value = {
-    log_group = aws_cloudwatch_log_group.this
-  }
-}
-

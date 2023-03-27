@@ -26,6 +26,8 @@ locals {
   dns_domain_name      = local.global.dns.route53_domains.id
   route53_zone_id      = local.global.dns.route53_zone.zone_id
   docdb_global_cluster = local.global.docdb.global_cluster
+  vpc_subnet_ids       = module.vpc.private_subnets
+  vpc_id               = module.vpc.vpc_id
 }
 
 # aws provider configuration
@@ -37,7 +39,7 @@ provider "aws" {
 # create public security group
 resource "aws_security_group" "this" {
   name   = "${var.project_name}-public-sg"
-  vpc_id = module.vpc.vpc_id
+  vpc_id = local.vpc_id
   ingress {
     description = "allow all"
     from_port   = 0
@@ -145,27 +147,38 @@ resource "aws_efs_file_system" "this" {
 
 # create mount target 
 resource "aws_efs_mount_target" "this" {
-  count           = length(module.vpc.private_subnets)
-  subnet_id       = module.vpc.public_subnets[count.index]
+  count           = length(local.vpc_subnet_ids)
+  subnet_id       = local.vpc_subnet_ids[count.index]
   file_system_id  = aws_efs_file_system.this.id
   security_groups = [aws_security_group.this.id]
 }
 
 # subnet group for document db
 resource "aws_docdb_subnet_group" "this" {
-  name       = "${var.project_name}-${local.aws_region}-"
-  subnet_ids = module.vpc.private_subnets
+  name       = "${var.project_name}-${local.aws_region}"
+  subnet_ids = concat(module.vpc.private_subnets, module.vpc.public_subnets)
 }
 
+resource "aws_docdb_cluster_parameter_group" "this" {
+  family      = "docdb5.0"
+  name        = var.project_name
+  description = "docdb custom parameter group"
+
+  parameter {
+    name  = "tls"
+    value = "disabled"
+  }
+}
 # create document db
 resource "aws_docdb_cluster" "this" {
-  engine                 = local.docdb_global_cluster.engine
-  engine_version         = local.docdb_global_cluster.engine_version
-  cluster_identifier     = "${var.project_name}-docdb-${local.aws_region}"
-  master_username        = var.docdb_mongo_username
-  master_password        = var.docdb_mongo_password
-  db_subnet_group_name   = aws_docdb_subnet_group.this.name
-  vpc_security_group_ids = [aws_security_group.this.id]
+  engine                          = "docdb"
+  engine_version                  = "5.0"
+  cluster_identifier              = "${var.project_name}-docdb-${local.aws_region}"
+  master_username                 = var.docdb_mongo_username
+  master_password                 = var.docdb_mongo_password
+  db_subnet_group_name            = aws_docdb_subnet_group.this.name
+  vpc_security_group_ids          = [aws_security_group.this.id]
+  db_cluster_parameter_group_name = aws_docdb_cluster_parameter_group.this.name
   #global_cluster_identifier = local.docdb_global_cluster.id
 }
 
@@ -173,11 +186,6 @@ resource "aws_docdb_cluster_instance" "primary" {
   engine             = local.docdb_global_cluster.engine
   identifier         = "${var.project_name}-docdb-${local.aws_region}-instance"
   cluster_identifier = aws_docdb_cluster.this.id
-  instance_class     = "db.t3.medium"
+  instance_class     = "db.t4g.medium"
 }
 
-
-# logs for msk
-resource "aws_cloudwatch_log_group" "this" {
-  name = "${var.project_name}-ecs-logs"
-}

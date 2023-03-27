@@ -128,6 +128,6 @@ resource "aws_msk_cluster" "this" {
 
 # logs for msk
 resource "aws_cloudwatch_log_group" "this" {
-  name = "${var.project_name}-broker-logs"
+  name = "${var.project_name}-msk-logs"
 }
 

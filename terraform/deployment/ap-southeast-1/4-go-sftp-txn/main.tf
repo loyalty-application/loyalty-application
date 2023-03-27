@@ -43,13 +43,12 @@ locals {
   iam_ecs_instance_role_arn    = local.global.iam.ecs.instance_role.arn
   iam_ecs_service_role_arn     = local.global.iam.ecs.service_role.arn
 
-  aws_region                = local.region.aws.aws_region
-  vpc_subnet_ids            = local.region.vpc.private_subnets
-  vpc_id                    = local.region.vpc.vpc_id
-  key_pair_name             = local.region.key_pairs.names[0]
-  efs_file_system_id        = local.region.efs.file_system.id
-  msk_connection_string     = local.msk.msk.bootstrap_brokers
-  cloudwatch_log_group_name = local.region.cloudwatch.log_group.name
+  aws_region            = local.region.aws.aws_region
+  vpc_subnet_ids        = local.region.vpc.private_subnets
+  vpc_id                = local.region.vpc.vpc_id
+  key_pair_name         = local.region.key_pairs.names[0]
+  efs_file_system_id    = local.region.efs.file_system.id
+  msk_connection_string = local.msk.msk.bootstrap_brokers
 }
 
 # create security groups
@@ -123,8 +122,9 @@ resource "aws_ecs_task_definition" "init_kafka" {
       logConfiguration = {
         logDriver = "awslogs",
         options = {
-          awslogs-group  = local.cloudwatch_log_group_name,
-          awslogs-region = local.aws_region,
+          awslogs-group         = aws_cloudwatch_log_group.this.name
+          awslogs-region        = local.aws_region
+          awslogs-stream-prefix = var.project_name
         }
       }
       environment = [
@@ -140,6 +140,8 @@ resource "aws_ecs_task_definition" "init_kafka" {
     }
   ])
 }
+
+
 
 # onetime tasks
 data "aws_ecs_task_execution" "this" {
@@ -180,8 +182,9 @@ resource "aws_ecs_task_definition" "go_sftp_txn" {
       logConfiguration = {
         logDriver = "awslogs",
         options = {
-          awslogs-group  = local.cloudwatch_log_group_name,
-          awslogs-region = local.aws_region,
+          awslogs-group         = aws_cloudwatch_log_group.this.name
+          awslogs-region        = local.aws_region
+          awslogs-stream-prefix = var.project_name
         }
       }
       environment = [
@@ -229,16 +232,20 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.go_sftp_txn.arn
   }
-  input = jsonencode({
-    containerOverrides = [
-      {
-        name = "go-sftp-txn",
-        command = [
-          "2021-08-27"
-        ]
-      }
-    ]
-  })
+  #input = jsonencode({
+  #containerOverrides = [
+  #{
+  #name = "go-sftp-txn",
+  #command = [
+  #"2021-08-27"
+  #]
+  #}
+  #]
+  #})
 
 }
 
+
+resource "aws_cloudwatch_log_group" "this" {
+  name = "${var.project_name}-logs"
+}

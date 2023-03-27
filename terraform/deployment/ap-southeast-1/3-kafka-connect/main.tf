@@ -145,6 +145,14 @@ resource "aws_ecs_task_definition" "this" {
       essential         = true
       memoryReservation = 256
       #privileged        = true
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.this.name
+          awslogs-region        = local.aws_region
+          awslogs-stream-prefix = var.project_name
+        }
+      }
       portMappings = [
         {
           containerPort = local.container_port
@@ -203,4 +211,8 @@ resource "aws_route53_record" "this" {
   type    = "CNAME"
   ttl     = 3600
   records = [module.lb_tg.lb.dns_name]
+}
+
+resource "aws_cloudwatch_log_group" "this" {
+  name = "${var.project_name}-logs"
 }
