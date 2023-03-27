@@ -1,42 +1,4 @@
-terraform {
-  required_providers {
-    mongodbatlas = {
-      source  = "mongodb/mongodbatlas"
-      version = "1.8.1"
-    }
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
-    }
-  }
-  required_version = ">= 1.2.0"
-}
 
-# create a mongodb cluster
-resource "mongodbatlas_advanced_cluster" "this" {
-  project_id   = var.atlas.project_id
-  name         = var.atlas.project_name
-  cluster_type = "REPLICASET"
-  disk_size_gb = 10
-
-  replication_specs {
-    region_configs {
-      electable_specs {
-        instance_size = "M10"
-        node_count    = 3
-      }
-      provider_name = "AWS"
-      priority      = 7
-      region_name   = var.atlas.project_region
-      auto_scaling {
-        disk_gb_enabled = false
-        compute_enabled = false
-      }
-    }
-  }
-
-  #termination_protection_enabled = true
-}
 
 # atlas automatically provisions a network peering container when you create a cluster
 # https://www.mongodb.com/docs/atlas/security-vpc-peering/
