@@ -250,16 +250,14 @@ services:
   init-kafka:
     image: init-kafka:latest
     build:
-      context: .
-      dockerfile: ./init-kafka/Dockerfile
+      context: ./init-kafka
+      dockerfile: ./Dockerfile
     depends_on:
       - broker
       - connect
     environment:
       BOOTSTRAP_SERVERS: broker:29092
       CONNECTOR_HOST: http://connect:8083
-    volumes:
-      - ./run.sh:/run.sh
     profiles: [ 'kafka' ]
 
   # kafka schema-registry

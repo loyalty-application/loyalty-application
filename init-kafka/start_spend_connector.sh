@@ -10,7 +10,7 @@ curl -i --max-time 60 --retry-connrefused --retry 10 -X PUT -H "Accept:applicati
   "input.path": "/data/unprocessed",
   "finished.path": "/data/processed",
   "error.path": "/data/error",
-  "input.file.pattern": ".*\\.csv",
+  "input.file.pattern": ".*spend\\.csv",
   "key.schema": "{\"name\":\"com.github.jcustenborder.kafka.connect.model.Key\",\"type\":\"STRUCT\",\"isOptional\":false,\"fieldSchemas\":{\"card_id\":{\"type\":\"STRING\",\"isOptional\":true}}}",
   "value.schema": "{\"name\":\"com.github.jcustenborder.kafka.connect.model.Value\",\"type\":\"STRUCT\",\"isOptional\":false,\"fieldSchemas\":{\"id\":{\"type\":\"STRING\",\"isOptional\":true},\"transaction_id\":{\"type\":\"STRING\",\"isOptional\":true},\"merchant\":{\"type\":\"STRING\",\"isOptional\":true},\"mcc\":{\"type\":\"STRING\",\"isOptional\":true},\"currency\":{\"type\":\"STRING\",\"isOptional\":true},\"amount\":{\"type\":\"STRING\",\"isOptional\":true},\"transaction_date\":{\"type\":\"STRING\",\"isOptional\":true},\"card_id\":{\"type\":\"STRING\",\"isOptional\":true},\"card_pan\":{\"type\":\"STRING\",\"isOptional\":true},\"card_type\":{\"type\":\"STRING\",\"isOptional\":true}}}","value.converter":"org.apache.kafka.connect.json.JsonConverter",
   "value.converter.schemas.enable":"false",
