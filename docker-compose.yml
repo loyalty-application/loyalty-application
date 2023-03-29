@@ -92,39 +92,39 @@ services:
       - ./go-worker-node:/worker
     profiles: [ "kafka" ]
 
-  go-worker2:
-    container_name: go-worker2
-    image: go-worker:latest
-    build:
-      context: ./go-worker-node
-      dockerfile: ./docker/Dockerfile
-    env_file:
-      - ./go-worker-node/.env
-    restart: always
-    depends_on:
-      - broker
-      - mongo
-    platform: linux/amd64
-    volumes:
-      - ./go-worker-node:/worker
-    profiles: [ "kafka" ]
+  # go-worker2:
+  #   container_name: go-worker2
+  #   image: go-worker:latest
+  #   build:
+  #     context: ./go-worker-node
+  #     dockerfile: ./docker/Dockerfile
+  #   env_file:
+  #     - ./go-worker-node/.env
+  #   restart: always
+  #   depends_on:
+  #     - broker
+  #     - mongo
+  #   platform: linux/amd64
+  #   volumes:
+  #     - ./go-worker-node:/worker
+  #   profiles: [ "kafka" ]
 
-  go-worker3:
-    container_name: go-worker3
-    image: go-worker:latest
-    build:
-      context: ./go-worker-node
-      dockerfile: ./docker/Dockerfile
-    env_file:
-      - ./go-worker-node/.env
-    restart: always
-    depends_on:
-      - broker
-      - mongo
-    platform: linux/amd64
-    volumes:
-      - ./go-worker-node:/worker
-    profiles: [ "kafka" ]
+  # go-worker3:
+  #   container_name: go-worker3
+  #   image: go-worker:latest
+  #   build:
+  #     context: ./go-worker-node
+  #     dockerfile: ./docker/Dockerfile
+  #   env_file:
+  #     - ./go-worker-node/.env
+  #   restart: always
+  #   depends_on:
+  #     - broker
+  #     - mongo
+  #   platform: linux/amd64
+  #   volumes:
+  #     - ./go-worker-node:/worker
+  #   profiles: [ "kafka" ]
 
   # go-sft-txn
   go-sftp-txn:
