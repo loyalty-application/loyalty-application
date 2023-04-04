@@ -331,6 +331,7 @@ services:
         #
         # -----------
         # Launch the Kafka Connect worker
+        rm /data/unprocessed/*.PROCESSING &
         ./run.sh 2021-09-20 &
         /etc/confluent/docker/run &
         #
@@ -389,6 +390,7 @@ services:
         #
         # -----------
         # Launch the Kafka Connect worker
+        rm /data/unprocessed/*.PROCESSING &
         ./run.sh 2021-09-20 &
         /etc/confluent/docker/run &
         #

@@ -38,3 +38,4 @@ terraform.rc
 
 test
 .DS_Store
+.csv

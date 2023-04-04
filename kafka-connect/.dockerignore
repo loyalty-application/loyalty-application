@@ -1,2 +1,5 @@
 Dockerfile
 .dockerignore
+connect.go
+go.mod
+go.sum
