@@ -1,11 +1,25 @@
 # required variables ---
-variable "SFTP_URL" {
-  sensitive   = true
-  type        = string
-  description = "SFTP URL to pull files from"
+variable "SFTP_USERNAME" {
+  sensitive = true
+  type      = string
+}
+variable "SFTP_PASSWORD" {
+  sensitive = true
+  type      = string
+}
+variable "SFTP_HOST" {
+  sensitive = true
+  type      = string
 }
 
+
 # optional variables
+# connector host for the init script
+variable "CONNECTOR_HOST" {
+  type    = string
+  default = "https://kafka-connect.itsag1t6.com"
+}
+
 #project
 variable "project_name" {
   type        = string
@@ -33,8 +47,3 @@ variable "ecs" {
   }
 }
 
-# connector host for the init script
-variable "CONNECTOR_HOST" {
-  type    = string
-  default = "https://kafka-connect.itsag1t6.com"
-}

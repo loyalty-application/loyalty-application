@@ -112,7 +112,7 @@ module "ecs_ec2" {
 module "lb_tg" {
   source = "../../../modules/ecs-ec2-lb-tg"
   vpc = {
-    subnets = local.vpc_subnet_ids,
+    subnets = local.region.vpc.public_subnets
     id      = local.vpc_id
   }
   ecs         = { asg = { id = module.ecs_ec2.asg.id } }

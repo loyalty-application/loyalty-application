@@ -23,7 +23,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: ./init-kafka/Dockerfile
+          context: ./kafka-connect
+          file: ./kafka-connect/Dockerfile
           push: true
-          tags: loyaltyapplication/init-kafka:latest
+          tags: loyaltyapplication/kafka-connect:latest
