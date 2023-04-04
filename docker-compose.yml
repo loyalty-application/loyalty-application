@@ -252,6 +252,9 @@ services:
     build:
       context: ./init-kafka
       dockerfile: ./Dockerfile
+
+    env_file:
+      - .env
     depends_on:
       - broker
       - connect
