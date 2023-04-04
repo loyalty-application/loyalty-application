@@ -82,7 +82,7 @@ services:
       context: ./go-worker-node
       dockerfile: ./docker/Dockerfile
     env_file:
-      - ./go-worker-node/.env
+      - ./go-worker-node/.ftp.env
     restart: always
     depends_on:
       - broker
@@ -92,54 +92,54 @@ services:
       - ./go-worker-node:/worker
     profiles: [ "kafka" ]
 
-  # go-worker2:
-  #   container_name: go-worker2
-  #   image: go-worker:latest
-  #   build:
-  #     context: ./go-worker-node
-  #     dockerfile: ./docker/Dockerfile
-  #   env_file:
-  #     - ./go-worker-node/.env
-  #   restart: always
-  #   depends_on:
-  #     - broker
-  #     - mongo
-  #   platform: linux/amd64
-  #   volumes:
-  #     - ./go-worker-node:/worker
-  #   profiles: [ "kafka" ]
-
-  # go-worker3:
-  #   container_name: go-worker3
-  #   image: go-worker:latest
-  #   build:
-  #     context: ./go-worker-node
-  #     dockerfile: ./docker/Dockerfile
-  #   env_file:
-  #     - ./go-worker-node/.env
-  #   restart: always
-  #   depends_on:
-  #     - broker
-  #     - mongo
-  #   platform: linux/amd64
-  #   volumes:
-  #     - ./go-worker-node:/worker
-  #   profiles: [ "kafka" ]
-
-  # go-sft-txn
-  go-sftp-txn:
-    container_name: go-sftp-txn
-    image: go-sftp-txn:latest
+  go-worker2:
+    container_name: go-worker2
+    image: go-worker:latest
     build:
-      context: ./go-sftp-txn
+      context: ./go-worker-node
       dockerfile: ./docker/Dockerfile
-    env_file: ./go-sftp-txn/.env
-    volumes:
-      - ./go-sftp-txn/data:/root/data
-    command: "2021-08-27"
+    env_file:
+      - ./go-worker-node/.rest.env
+    restart: always
     depends_on:
-      - connect
+      - broker
+      - mongo
+    platform: linux/amd64
+    volumes:
+      - ./go-worker-node:/worker
     profiles: [ "kafka" ]
+
+  go-worker3:
+    container_name: go-worker3
+    image: go-worker:latest
+    build:
+      context: ./go-worker-node
+      dockerfile: ./docker/Dockerfile
+    env_file:
+      - ./go-worker-node/.user.env
+    restart: always
+    depends_on:
+      - broker
+      - mongo
+    platform: linux/amd64
+    volumes:
+      - ./go-worker-node:/worker
+    profiles: [ "kafka" ]
+
+  # go-sftp-txn
+  # go-sftp-txn:
+  #   container_name: go-sftp-txn
+  #   image: go-sftp-txn:latest
+  #   build:
+  #     context: ./go-sftp-txn
+  #     dockerfile: ./docker/Dockerfile
+  #   env_file: ./go-sftp-txn/.env
+  #   volumes:
+  #     - ./go-sftp-txn/data:/root/data
+  #   command: "2021-09-20"
+  #   depends_on:
+  #     - connect
+  #   profiles: [ "kafka" ]
 
   # kafka broker 1
   broker:
@@ -277,9 +277,14 @@ services:
 
   # kafka connect
   connect:
-    image: cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
+    image: kafka-connect:latest
+    build:
+      context: ./kafka-connect
+      dockerfile: ./Dockerfile
     hostname: connect
     container_name: connect
+    env_file:
+      - ./kafka-connect/.env
     depends_on:
       - broker
       - schema-registry
@@ -321,24 +326,30 @@ services:
       - |
         chmod 777 /data && chmod 777 /data/* && echo "Installing connector plugins"
         # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
-        confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
+        # confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
         # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
         #
         # -----------
         # Launch the Kafka Connect worker
+        ./run.sh 2021-09-20 &
         /etc/confluent/docker/run &
         #
         # Don't exit
         sleep infinity
     volumes:
-      - ./go-sftp-txn/data:/data
+      - ./kafka-connect/data:/data
     profiles: [ "kafka" ]
 
   # kafka connect
   connect1:
-    image: cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
+    image: kafka-connect:latest
+    build:
+      context: ./kafka-connect
+      dockerfile: ./Dockerfile
     hostname: connect1
     container_name: connect1
+    env_file:
+      - ./kafka-connect/.env
     depends_on:
       - broker
       - schema-registry
@@ -373,17 +384,18 @@ services:
       - |
         chmod 777 /data && chmod 777 /data/* && echo "Installing connector plugins"
         # confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.2
-        confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
+        # confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:2.0.65
         # confluent-hub install --no-prompt streamthoughts/kafka-connect-file-pulse:1.5.0
         #
         # -----------
         # Launch the Kafka Connect worker
+        ./run.sh 2021-09-20 &
         /etc/confluent/docker/run &
         #
         # Don't exit
         sleep infinity
     volumes:
-      - ./go-sftp-txn/data:/data
+      - ./kafka-connect/data:/data
     profiles: [ "kafka" ]
 
   # kafka control center

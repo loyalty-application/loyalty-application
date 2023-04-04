@@ -22,5 +22,6 @@ curl -i --max-time 60 --retry-connrefused --retry 10 -X PUT -H "Accept:applicati
   "transforms.setDefaultValueToInt.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
   "transforms.setDefaultValueToInt.field": "mcc",
   "transforms.setDefaultValueToInt.default": 0,
-  "transforms.setDefaultValueToInt.type.to": "int32"
+  "transforms.setDefaultValueToInt.type.to": "int32",
+  "halt.on.error":"false"
 }'

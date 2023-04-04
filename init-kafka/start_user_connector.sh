@@ -15,5 +15,6 @@ curl -i --max-time 60 --retry-connrefused --retry 10 -X PUT -H "Accept:applicati
   "value.schema": "{\"name\":\"com.github.jcustenborder.kafka.connect.model.Value\",\"type\":\"STRUCT\",\"isOptional\":false,\"fieldSchemas\":{\"id\":{\"type\":\"STRING\",\"isOptional\":true},\"first_name\":{\"type\":\"STRING\",\"isOptional\":true},\"last_name\":{\"type\":\"STRING\",\"isOptional\":true},\"phone\":{\"type\":\"STRING\",\"isOptional\":true},\"email\":{\"type\":\"STRING\",\"isOptional\":true},\"created_at\":{\"type\":\"STRING\",\"isOptional\":true},\"updated_at\":{\"type\":\"STRING\",\"isOptional\":true},\"card_id\":{\"type\":\"STRING\",\"isOptional\":true},\"card_pan\":{\"type\":\"STRING\",\"isOptional\":true},\"card_type\":{\"type\":\"STRING\",\"isOptional\":true}}}","value.converter":"org.apache.kafka.connect.json.JsonConverter",
   "value.converter.schemas.enable":"false",
   "producer.override.acks":"1",
-  "producer.override.batch.size":"32768"
+  "producer.override.batch.size":"32768",
+  "halt.on.error":"false"
 }'
