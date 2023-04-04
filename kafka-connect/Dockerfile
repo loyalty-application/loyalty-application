@@ -2,7 +2,11 @@ FROM cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
 
 COPY . .
 
-RUN apt install golang
+RUN yum install epel-release
+
+RUN yum update
+
+RUN yum install golang
 
 RUN go build ./connect.go
 
