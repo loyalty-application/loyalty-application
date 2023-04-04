@@ -102,22 +102,103 @@ module "ecs_ec2" {
   )
 }
 
-# ecs task definition
-resource "aws_ecs_task_definition" "init_kafka" {
-  family = "init-kafka-task-def"
-  volume {
-    name = "efsVolume"
-    efs_volume_configuration {
-      transit_encryption = "DISABLED"
-      file_system_id     = local.efs_file_system_id
-      root_directory     = "/"
-    }
-  }
-  network_mode = "awsvpc"
-  container_definitions = jsonencode([
+## ecs task definition
+#resource "aws_ecs_task_definition" "init_kafka" {
+#family = "init-kafka-task-def"
+#volume {
+#name = "efsVolume"
+#efs_volume_configuration {
+#transit_encryption = "DISABLED"
+#file_system_id     = local.efs_file_system_id
+#root_directory     = "/"
+#}
+#}
+#network_mode = "awsvpc"
+#container_definitions = jsonencode([
+#{
+#name              = "init-kafka-container"
+#image             = "docker.io/loyaltyapplication/init-kafka:latest"
+#memoryReservation = 256
+#logConfiguration = {
+#logDriver = "awslogs",
+#options = {
+#awslogs-group         = aws_cloudwatch_log_group.this.name
+#awslogs-region        = local.aws_region
+#awslogs-stream-prefix = var.project_name
+#}
+#}
+#environment = [
+#{ name = "BOOTSTRAP_SERVERS", value = local.msk_connection_string },
+#{ name = "CONNECTOR_HOST", value = var.CONNECTOR_HOST }
+#]
+#mountPoints : [
+#{
+#sourceVolume  = "efsVolume",
+#containerPath = "/data",
+#}
+#]
+#}
+#])
+#}
+
+## onetime tasks
+#data "aws_ecs_task_execution" "this" {
+#cluster         = module.ecs_ec2.cluster.id
+#task_definition = aws_ecs_task_definition.init_kafka.arn
+#desired_count   = 1
+#network_configuration {
+#subnets         = local.vpc_subnet_ids
+#security_groups = [aws_security_group.this.id]
+#}
+#capacity_provider_strategy {
+#base              = 1
+#weight            = 100
+#capacity_provider = module.ecs_ec2.cp.name
+#}
+#depends_on = [
+#module.ecs_ec2.cluster
+#]
+#}
+
+locals {
+  kafka_connect_task_definition = [
+    {
+      name              = var.project_name
+      image             = "docker.io/loyaltyapplication/kafka-connect:latest"
+      memoryReservation = 256
+      network_mode      = "awsvpc"
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.this.name
+          awslogs-region        = local.aws_region
+          awslogs-stream-prefix = var.project_name
+        }
+      }
+      environment = concat([for k, v in var.KAFKA_CONNECT_ENV : { name = k, value = v }],
+        [
+          { name = "APP_ENV", value = "release" },
+          { name = "CONNECT_BOOTSTRAP_SERVERS", value = local.msk_connection_string },
+          { name = "CONNECT", value = "SFTP_NODE" },
+          { name = "SFTP_HOST", value = var.SFTP_HOST },
+          { name = "SFTP_USERNAME", value = var.SFTP_USERNAME },
+          { name = "SFTP_PASSWORD", value = var.SFTP_PASSWORD },
+      ])
+      mountPoints : [
+        {
+          sourceVolume  = "efsVolume",
+          containerPath = "/data",
+        }
+      ]
+      command = [
+        # chmod 777 /data && chmod 777 /data[> && 
+        "sh", "-c", "echo $SFTP_HOST && (rm /data/unprocessed/*.PROCESSING &) && (./run.sh 2021-09-20 &) && (/etc/confluent/docker/run &) && tail -f /dev/null"
+      ]
+    },
     {
       name              = "init-kafka-container"
       image             = "docker.io/loyaltyapplication/init-kafka:latest"
+      links             = [var.project_name]
       memoryReservation = 256
       logConfiguration = {
         logDriver = "awslogs",
@@ -129,7 +210,7 @@ resource "aws_ecs_task_definition" "init_kafka" {
       }
       environment = [
         { name = "BOOTSTRAP_SERVERS", value = local.msk_connection_string },
-        { name = "CONNECTOR_HOST", value = var.CONNECTOR_HOST }
+        { name = "CONNECTOR_HOST", value = var.project_name }
       ]
       mountPoints : [
         {
@@ -138,34 +219,14 @@ resource "aws_ecs_task_definition" "init_kafka" {
         }
       ]
     }
-  ])
-}
-
-
-
-# onetime tasks
-data "aws_ecs_task_execution" "this" {
-  cluster         = module.ecs_ec2.cluster.id
-  task_definition = aws_ecs_task_definition.init_kafka.arn
-  desired_count   = 1
-  network_configuration {
-    subnets         = local.vpc_subnet_ids
-    security_groups = [aws_security_group.this.id]
-  }
-  capacity_provider_strategy {
-    base              = 1
-    weight            = 100
-    capacity_provider = module.ecs_ec2.cp.name
-  }
-  depends_on = [
-    module.ecs_ec2.cluster
   ]
+
 }
 
 # ----------------------------------------------------------------------
 # ecs task definition
-resource "aws_ecs_task_definition" "go_sftp_txn" {
-  family = "go-sftp-txn-task-def"
+resource "aws_ecs_task_definition" "kafka_connect" {
+  family = "${var.project_name}-task-def"
   volume {
     name = "efsVolume"
     efs_volume_configuration {
@@ -174,32 +235,7 @@ resource "aws_ecs_task_definition" "go_sftp_txn" {
       root_directory     = "/"
     }
   }
-  container_definitions = jsonencode([
-    {
-      name              = "go-sftp-txn"
-      image             = "docker.io/loyaltyapplication/go-sftp-txn:latest"
-      memoryReservation = 256
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.this.name
-          awslogs-region        = local.aws_region
-          awslogs-stream-prefix = var.project_name
-        }
-      }
-      environment = [
-        { name = "SFTP_USERNAME", key = var.SFTP_USERNAME },
-        { name = "SFTP_PASSWORD", key = var.SFTP_PASSWORD },
-        { name = "SFTP_HOST", key = var.SFTP_HOST }
-      ]
-      mountPoints : [
-        {
-          sourceVolume  = "efsVolume",
-          containerPath = "/data",
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode(local.kafka_connect_task_definition)
 }
 
 # iam role
@@ -217,23 +253,36 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
 
 # cloudwatch event rule
 resource "aws_cloudwatch_event_rule" "this" {
-  name        = "go-sftp-txn-cron-rule"
-  description = "Cron Job to run go-sftp-txn"
-  #schedule_expression = "rate(2 minutes)"
-  schedule_expression = "rate(12 hours)"
+  name                = "${var.project_name}-cron-rule"
+  description         = "Cron Job"
+  schedule_expression = "rate(5 minutes)"
+  #schedule_expression = "rate(12 hours)"
 }
 
 # cloudwatch event target
 resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
-  target_id = "go-sftp-txn-job"
+  target_id = "${var.project_name}-job"
   arn       = module.ecs_ec2.cluster.arn
   rule      = aws_cloudwatch_event_rule.this.name
   role_arn  = aws_iam_role.ecs_events.arn
 
   ecs_target {
     task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.go_sftp_txn.arn
+    task_definition_arn = aws_ecs_task_definition.kafka_connect.arn
   }
+
+  #input = jsonencode({
+  #containerOverrides = [
+  #{
+  #name = var.project_name,
+
+  #}
+  #]
+  #})
+
+  input = jsonencode({
+    containerOverrides = local.kafka_connect_task_definition
+  })
   #input = jsonencode({
   #containerOverrides = [
   #{
@@ -244,7 +293,6 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
   #}
   #]
   #})
-
 }
 
 

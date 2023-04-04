@@ -1,8 +1,12 @@
 FROM cnfldemos/cp-server-connect-datagen:0.6.0-7.3.0
 
-COPY connect ./connect
+COPY ./connect.go ./connect.go
 
 COPY run.sh ./run.sh
+
+COPY --from=golang:1.18 /usr/local/go/ /usr/local/go/
+
+RUN go build ./connect.go
 
 RUN mkdir spend && mkdir users
 

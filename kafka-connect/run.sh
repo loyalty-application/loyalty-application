@@ -2,6 +2,10 @@
 
 BINARY_PATH=./connect
 
+echo $SFTP_HOST
+echo $SFTP_USERNAME
+echo $SFTP_PASSWORD
+
 # Run the binary in a loop until it returns a successful exit code
 # change to another env var
 while [ $CONNECT = "SFTP_NODE" ]; do
