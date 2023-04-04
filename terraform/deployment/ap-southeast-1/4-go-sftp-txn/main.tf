@@ -188,7 +188,9 @@ resource "aws_ecs_task_definition" "go_sftp_txn" {
         }
       }
       environment = [
-        { name = "SFTP_URL", key = var.SFTP_URL }
+        { name = "SFTP_USERNAME", key = var.SFTP_USERNAME },
+        { name = "SFTP_PASSWORD", key = var.SFTP_PASSWORD },
+        { name = "SFTP_HOST", key = var.SFTP_HOST }
       ]
       mountPoints : [
         {
@@ -215,10 +217,10 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
 
 # cloudwatch event rule
 resource "aws_cloudwatch_event_rule" "this" {
-  name                = "go-sftp-txn-cron-rule"
-  description         = "Cron Job to run go-sftp-txn"
-  schedule_expression = "rate(2 minutes)"
-  #schedule_expression = "rate(30 minutes)"
+  name        = "go-sftp-txn-cron-rule"
+  description = "Cron Job to run go-sftp-txn"
+  #schedule_expression = "rate(2 minutes)"
+  schedule_expression = "rate(12 hours)"
 }
 
 # cloudwatch event target
