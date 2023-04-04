@@ -1,6 +1,9 @@
 #!/bin/bash
 
 BINARY_PATH="./connect"
+echo $SFTP_HOST
+echo $SFTP_USERNAME
+echo $SFTP_PASSWORD
 
 # Use double quotes to prevent word splitting and globbing
 # Change to another env var, e.g. CONNECT_TYPE
