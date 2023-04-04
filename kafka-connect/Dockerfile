@@ -4,9 +4,9 @@ COPY connect.go ./connect.go
 
 COPY run.sh ./run.sh
 
-COPY --from=golang:1.18 /usr/local/go/ /usr/local/go/
+RUN apt install golang
 
-RUN /usr/local/go build ./connect.go
+RUN go build ./connect.go
 
 RUN mkdir spend && mkdir users
 
