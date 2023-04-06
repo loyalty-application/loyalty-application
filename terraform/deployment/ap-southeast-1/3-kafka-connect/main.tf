@@ -44,7 +44,7 @@ locals {
   iam_ecs_service_role_arn     = local.global.iam.ecs.service_role.arn
 
   aws_region            = local.region.aws.aws_region
-  vpc_subnet_ids        = local.region.vpc.private_subnets
+  vpc_subnet_ids        = local.region.vpc.public_subnets
   vpc_id                = local.region.vpc.vpc_id
   key_pair_name         = local.region.key_pairs.names[0]
   efs_file_system_id    = local.region.efs.file_system.id
@@ -141,7 +141,7 @@ module "ecs_ec2" {
 #])
 #}
 
-## onetime tasks
+# onetime tasks
 #data "aws_ecs_task_execution" "this" {
 #cluster         = module.ecs_ec2.cluster.id
 #task_definition = aws_ecs_task_definition.init_kafka.arn
@@ -166,6 +166,7 @@ locals {
       name              = var.project_name
       image             = "docker.io/loyaltyapplication/kafka-connect:latest"
       memoryReservation = 256
+      port              = 8083
       network_mode      = "awsvpc"
       logConfiguration = {
         logDriver = "awslogs",
@@ -179,7 +180,7 @@ locals {
         [
           { name = "APP_ENV", value = "release" },
           { name = "CONNECT_BOOTSTRAP_SERVERS", value = local.msk_connection_string },
-          { name = "CONNECT", value = "SFTP_NODE" },
+          { name = "CONNECT", value = "" },
           { name = "SFTP_HOST", value = var.SFTP_HOST },
           { name = "SFTP_USERNAME", value = var.SFTP_USERNAME },
           { name = "SFTP_PASSWORD", value = var.SFTP_PASSWORD },
@@ -192,7 +193,7 @@ locals {
       ]
       command = [
         # chmod 777 /data && chmod 777 /data[> && 
-        "sh", "-c", "echo $SFTP_HOST && (rm /data/unprocessed/*.PROCESSING &) && (./run.sh 2021-09-20 &) && (/etc/confluent/docker/run &) && tail -f /dev/null"
+        "sh", "-c", "(rm /data/unprocessed/*.PROCESSING &) && (./run.sh 2021-09-20 &) && (/etc/confluent/docker/run &) && tail -f /dev/null"
       ]
     },
     {
@@ -210,7 +211,7 @@ locals {
       }
       environment = [
         { name = "BOOTSTRAP_SERVERS", value = local.msk_connection_string },
-        { name = "CONNECTOR_HOST", value = var.project_name }
+        { name = "CONNECTOR_HOST", value = "http://${var.project_name}:8083" }
       ]
       mountPoints : [
         {
@@ -253,10 +254,10 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
 
 # cloudwatch event rule
 resource "aws_cloudwatch_event_rule" "this" {
-  name                = "${var.project_name}-cron-rule"
-  description         = "Cron Job"
-  schedule_expression = "rate(5 minutes)"
-  #schedule_expression = "rate(12 hours)"
+  name        = "${var.project_name}-cron-rule"
+  description = "Cron Job"
+  #schedule_expression = "rate(5 minutes)"
+  schedule_expression = "rate(12 hours)"
 }
 
 # cloudwatch event target

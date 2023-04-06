@@ -22,6 +22,22 @@ variable "ecs" {
   }
 }
 
+variable "SMTP_PORT" {
+  type = number
+}
+variable "SMTP_SERVER" {
+  type = string
+}
+variable "SMTP_USERNAME" {
+  type = string
+}
+variable "SMTP_PASSWORD" {
+  type = string
+}
+variable "SENDER_EMAIL" {
+  type = string
+}
+
 # environment variables for task definition
 variable "ENV" {
   sensitive = true

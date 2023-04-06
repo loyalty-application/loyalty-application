@@ -26,10 +26,6 @@ output "key_pairs" {
   }
 }
 
-output "ecr" {
-  value = module.ecr
-}
-
 
 output "efs" {
   value = {

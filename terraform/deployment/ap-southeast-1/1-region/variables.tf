@@ -38,9 +38,4 @@ variable "project_name" {
   default     = "loyalty-application"
 }
 
-variable "ecr_project_names" {
-  type        = list(string)
-  description = "names of ecr repositories to create for the project - note that this may not be required for you as this is for development"
-  default     = []
-}
 

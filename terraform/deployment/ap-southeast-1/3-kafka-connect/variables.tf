@@ -1,9 +1,31 @@
-# generic project specific names
+# required variables ---
+variable "SFTP_USERNAME" {
+  sensitive = true
+  type      = string
+}
+variable "SFTP_PASSWORD" {
+  sensitive = true
+  type      = string
+}
+variable "SFTP_HOST" {
+  sensitive = true
+  type      = string
+}
+
+
+# optional variables
+
+# connector host for the init script
+#variable "CONNECTOR_HOST" {
+#type    = string
+#default = "https://kafka-connect.itsag1t6.com"
+#}
+
+#project
 variable "project_name" {
   type        = string
   description = "name for the project"
   default     = "kafka-connect"
-
 }
 
 # ecs configs
@@ -26,8 +48,7 @@ variable "ecs" {
   }
 }
 
-# environment variables for task definition
-variable "ENV" {
+variable "KAFKA_CONNECT_ENV" {
   sensitive = true
   type      = map(string)
   default = {
@@ -52,6 +73,7 @@ variable "ENV" {
     "CONNECT_LOG4J_LOGGERS"                       = "org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR",
   }
 }
+
 
 variable "tg" {
   type = object({

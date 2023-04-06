@@ -113,32 +113,6 @@ resource "aws_key_pair" "this" {
 }
 
 
-# create ecr repository for all projects 
-module "ecr" {
-  source          = "terraform-aws-modules/ecr/aws"
-  version         = "1.6.0"
-  for_each        = toset(var.ecr_project_names)
-  repository_name = each.key
-  repository_lifecycle_policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1,
-        description  = "Keep last 30 images",
-        selection = {
-          tagStatus     = "tagged",
-          tagPrefixList = ["v"],
-          countType     = "imageCountMoreThan",
-          countNumber   = 30
-        },
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
-  # set to false if true when destroying
-  repository_force_delete = false
-}
 
 # create efs 
 resource "aws_efs_file_system" "this" {

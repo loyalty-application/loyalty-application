@@ -116,7 +116,7 @@ resource "aws_ecs_task_definition" "this" {
   family = "${var.project_name}-task-def"
   container_definitions = jsonencode([
     {
-      name              = "${var.project_name}-container"
+      name              = "${var.project_name}-resttransactions"
       image             = local.container_image
       essential         = true
       memoryReservation = 256
@@ -142,7 +142,90 @@ resource "aws_ecs_task_definition" "this" {
           { name = "MONGO_USERNAME", value = local.docdb_username },
           { name = "MONGO_PASSWORD", value = local.docdb_password },
           { name = "MONGO_PORT", value = local.docdb_port },
-          { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string }
+          { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string },
+          { name = "WORKER_NODE_TYPE", value = "resttransactions" },
+          { name = "SMTP_SERVER", value = var.SMTP_SERVER },
+          { name = "SMTP_PORT", value = tostring(var.SMTP_PORT) },
+          { name = "SMTP_USERNAME", value = var.SMTP_USERNAME },
+          { name = "SMTP_PASSWORD", value = var.SMTP_PASSWORD },
+          { name = "SENDER_EMAIL", value = var.SENDER_EMAIL },
+
+        ]
+      )
+    },
+    {
+      name              = "${var.project_name}-users"
+      image             = local.container_image
+      essential         = true
+      memoryReservation = 256
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.this.name,
+          awslogs-region        = local.aws_region,
+          awslogs-stream-prefix = var.project_name
+        }
+      }
+      portMappings = [
+        {
+          containerPort = local.container_port
+          hostPort      = 0
+        }
+      ],
+      environment = concat([
+        for k, v in var.ENV : { name = k, value = v }
+        ],
+        [
+          { name = "MONGO_HOST", value = local.docdb_host },
+          { name = "MONGO_USERNAME", value = local.docdb_username },
+          { name = "MONGO_PASSWORD", value = local.docdb_password },
+          { name = "MONGO_PORT", value = local.docdb_port },
+          { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string },
+          { name = "WORKER_NODE_TYPE", value = "users" },
+          { name = "SMTP_SERVER", value = var.SMTP_SERVER },
+          { name = "SMTP_PORT", value = tostring(var.SMTP_PORT) },
+          { name = "SMTP_USERNAME", value = var.SMTP_USERNAME },
+          { name = "SMTP_PASSWORD", value = var.SMTP_PASSWORD },
+          { name = "SENDER_EMAIL", value = var.SENDER_EMAIL },
+
+        ]
+      )
+    },
+    {
+      name              = "${var.project_name}-transactions"
+      image             = local.container_image
+      essential         = true
+      memoryReservation = 256
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.this.name,
+          awslogs-region        = local.aws_region,
+          awslogs-stream-prefix = var.project_name
+        }
+      }
+      portMappings = [
+        {
+          containerPort = local.container_port
+          hostPort      = 0
+        }
+      ],
+      environment = concat([
+        for k, v in var.ENV : { name = k, value = v }
+        ],
+        [
+          { name = "MONGO_HOST", value = local.docdb_host },
+          { name = "MONGO_USERNAME", value = local.docdb_username },
+          { name = "MONGO_PASSWORD", value = local.docdb_password },
+          { name = "MONGO_PORT", value = local.docdb_port },
+          { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string },
+          { name = "WORKER_NODE_TYPE", value = "transactions" },
+          { name = "SMTP_SERVER", value = var.SMTP_SERVER },
+          { name = "SMTP_PORT", value = tostring(var.SMTP_PORT) },
+          { name = "SMTP_USERNAME", value = var.SMTP_USERNAME },
+          { name = "SMTP_PASSWORD", value = var.SMTP_PASSWORD },
+          { name = "SENDER_EMAIL", value = var.SENDER_EMAIL },
+
         ]
       )
     }
