@@ -158,7 +158,8 @@ resource "aws_ecs_task_definition" "this" {
         { name = "MONGO_USERNAME", value = local.docdb_username },
         { name = "MONGO_PASSWORD", value = local.docdb_password },
         { name = "MONGO_PORT", value = local.docdb_port },
-        { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string }
+        { name = "KAFKA_BOOTSTRAP_SERVER", value = local.msk_connection_string },
+        { name = "KAFKA_TOPIC", value = "resttransactions" }
       ]
     }
   ])
