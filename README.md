@@ -1,17 +1,20 @@
 # loyalty-application
 
+## Solution Architecture
+<img style="background:white" src="./.github/images/architecture.png"></img>
+
 ## Submodules
 This repo consist of the following microservices linked as submodules:
 - `next-js-frontend` - Web Application built with Next.js that serves users
 - `go-gin-backend` - REST API Server written in Gin to handle requests from users and applications
 - `go-worker-node` - Backend Worker Service written in Go to process Kafka events
-- `go-sftp-txn` - Backend Injesting Service written in Go to listen for new transaction files to read and push to the Kafka Broker
 
 ## Dependencies
 This project has the follow dependencies:
 - Submodules referenced 
 - [Docker](https://docs.docker.com/engine/install/)
 - Docker Compose
+- [Terraform](https://developer.hashicorp.com/terraform/downloads?product_intent=terraform)
 
 ## Setup
 
