@@ -23,19 +23,24 @@ variable "ecs" {
 }
 
 variable "SMTP_PORT" {
-  type = number
+  type    = number
+  default = 587
 }
 variable "SMTP_SERVER" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "SMTP_USERNAME" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "SMTP_PASSWORD" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "SENDER_EMAIL" {
-  type = string
+  type    = string
+  default = ""
 }
 
 # environment variables for task definition

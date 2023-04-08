@@ -1,0 +1,17 @@
+# Enter your smtp credentials to enable the email sending when a campaign
+# is successfully fulfilled
+SMTP_SERVER   = "smtp_host"
+SMTP_PORT     = 587
+SMTP_USERNAME = "smtp_user"
+SMTP_PASSWORD = "smtp_password"
+SENDER_EMAIL  = "sender@domain.com"
+
+# you may wish to override the configuration to run at least 2 instances for the ASG
+# ecs = {
+#   asg = {
+#     desired_capacity = 2
+#     max_size         = 3
+#     min_size         = 2
+#   }
+#   instance_type = "t3.medium"
+# }

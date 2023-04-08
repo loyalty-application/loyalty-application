@@ -1,0 +1,6 @@
+github = {
+  access_token = "Your github acess token"
+  branch_name  = "main"
+  repository   = "your main repository name"
+}
+
