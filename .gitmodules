@@ -1,0 +1,9 @@
+[submodule "next-js-frontend"]
+	path = next-js-frontend
+	url = git@github.com:loyalty-application/next-js-frontend.git
+[submodule "go-gin-backend"]
+	path = go-gin-backend
+	url = git@github.com:loyalty-application/go-gin-backend.git
+[submodule "go-worker-node"]
+	path = go-worker-node
+	url = https://github.com/loyalty-application/go-worker-node
